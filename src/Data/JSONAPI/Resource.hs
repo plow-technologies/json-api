@@ -26,10 +26,7 @@ instance (ToJSON a) => ToJSON (Resource a) where
       [ "id"            .= resId
       , "type"          .= resType
       , "attributes"    .= resObj
-      , "links"         .= linksObj
-      , "meta"          .= metaObj
-      , "relationships" .= rels
-      ] ++ "meta" .=? metaObj ++ "link" .=? linksObj ++ "relationships" .=? rels)
+      ] ++ "meta" .=? metaObj ++ "links" .=? linksObj ++ "relationships" .=? rels)
       
 instance (FromJSON a) => FromJSON (Resource a) where
   parseJSON = withObject "Resource" $ \o -> do

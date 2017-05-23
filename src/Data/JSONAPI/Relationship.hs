@@ -50,3 +50,6 @@ instance Monoid Relationships where
 mkRelationship :: Maybe Identifier -> Maybe Links -> Maybe Relationship
 mkRelationship Nothing Nothing = Nothing 
 mkRelationship i l   = Just $ Relationship i l
+
+mkRelationships :: Text -> Relationship -> Relationships
+mkRelationships key rel = Relationships $ HM.singleton key rel
