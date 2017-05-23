@@ -54,34 +54,14 @@ user2Example :: User
 user2Example =
   User 3 "Jordi" "333 W. 33rd St"
 
-{-
 documentGroupResourceText :: Text
 documentGroupResourceText = 
-     "{\"data\":{\"id\":\"1\",\"type\":\"groups\",\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"links\":{\"self\":\"/api/groups/1\"}"
-  <> ",\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}}}"
--}
--- without relationships, works
-{-
-documentGroupResourceText :: Text
-documentGroupResourceText = 
-     "{\"data\":{\"id\":\"1\",\"type\":\"groups\",\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"links\":{\"self\":\"/api/groups/1\"}}}"
--}
-{-
-documentGroupResourceText :: Text
-documentGroupResourceText = 
-     "{\"data\":{\"id\":\"1\",\"type\":\"groups\",\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"links\":{\"self\":\"/api/groups/1\"}"
-  <> ",\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}}}"
--}
-documentGroupResourceText :: Text
-documentGroupResourceText = 
---  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
-   "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}},\"id\":\"1\",\"type\":\"groups\"}}"
-
+  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
 
 documentGroupResourceExample :: Document GroupResource
 documentGroupResourceExample = 
   Document
-    [recodedGroupResourceResourceExample] -- [toResource groupResourceExample]
+    [toResource groupResourceExample]
     Nothing 
     Nothing 
     []
@@ -265,16 +245,12 @@ instance ResourcefulEntity GroupResource where
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
-  -- fromResource
-  -- toResource
-  {-
   toResource gr =
     Resource
       (Identifier (resourceIdentifier gr) (resourceType gr) (resourceMetaData gr))
-      gr -- (grGroup gr)
+      (gr { grUsers = [] } )
       (resourceLinks gr)
       (resourceRelationships gr)
-  -}
 {-
 fromResource :: Resource a -> a
 fromResource = resource
