@@ -12,7 +12,7 @@ module Data.JSONAPI.Relationship (
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
-import           Data.JSONAPI.Internal.Util ((.=?))
+import           Data.JSONAPI.Internal.Util ((.=?),(.=@),(.:@))
 import           Data.JSONAPI.Identifier (Identifier (..))
 import           Data.JSONAPI.Link (Links)
 import           Data.Text (Text)
@@ -22,17 +22,17 @@ import           GHC.Generics (Generic)
 
 data Relationship =
   Relationship
-    { identifier :: Maybe Identifier
-    , links      :: Maybe Links
+    { identifiers :: [Identifier] -- can be multiple
+    , links       :: Maybe Links
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON Relationship where
   toJSON (Relationship {..}) =
-    object ("data" .=? identifier ++ "links" .=? links)
+    object ("data" .=@ identifiers ++ "links" .=? links)
 
 instance FromJSON Relationship where
-  parseJSON = withObject "Relationship" $ \o ->
-    Relationship <$> o .:? "data"
+  parseJSON = withObject "Relationship" $ \o ->    
+    Relationship <$> o .:@ "data"
                  <*> o .:? "links"
 
 newtype Relationships = Relationships (HM.HashMap Text Relationship)
@@ -49,8 +49,8 @@ instance Monoid Relationships where
   mappend (Relationships a) (Relationships b) = Relationships $ HM.union a b
   mempty = Relationships $ HM.empty
 
-mkRelationship :: Maybe Identifier -> Maybe Links -> Maybe Relationship
-mkRelationship Nothing Nothing = Nothing 
+mkRelationship :: [Identifier] -> Maybe Links -> Maybe Relationship
+mkRelationship [] Nothing = Nothing 
 mkRelationship i l   = Just $ Relationship i l
 
 mkRelationships :: Text -> Relationship -> Relationships

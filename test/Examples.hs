@@ -59,7 +59,7 @@ bossExample =
     
 documentGroupResourceText :: Text
 documentGroupResourceText = 
-  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
+  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
 
 documentGroupResourceExample :: Document GroupResource
 documentGroupResourceExample = 
@@ -71,7 +71,7 @@ documentGroupResourceExample =
 
 documentUserResourceText :: Text
 documentUserResourceText = 
-  "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/4\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/5\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
+  "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
 
 documentUserResourceExample :: Document UserResource
 documentUserResourceExample = 
@@ -102,7 +102,7 @@ groupResourceResourceExample =
     (Identifier "1" "groups" Nothing)
     (GroupResource (Group 1 "test-group") [userExample])
     emptyLinks
-    (Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" Nothing] (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
 
 recodedGroupResourceResourceExample :: Resource GroupResource
 recodedGroupResourceResourceExample = 
@@ -110,7 +110,7 @@ recodedGroupResourceResourceExample =
     (Identifier "1" "groups" Nothing)
     (GroupResource (Group 1 "test-group") [])
     emptyLinks
-    (Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" Nothing] (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
   
 metaText :: Text
 metaText = "{\"pagination\":{\"currentPage\":1,\"totalPages\":15}}"
@@ -140,7 +140,7 @@ relationshipText :: Text
 relationshipText = "{\"data\":{\"id\":\"1\",\"type\":\"users\"},\"links\":{\"next\":\"/api/users/2\",\"self\":\"/api/users/1\"}}"
 
 relationshipExample :: Relationship
-relationshipExample = Relationship (Just identifierExample) (Just linksExample)
+relationshipExample = Relationship [identifierExample] (Just linksExample)
 
 --resourceText :: Text
 --resourceText = "{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"links\":{\"self\":\"/api/users/2\",\"friend\":\"/api/users/3\"},\"relationships\":[{}]}"
@@ -161,7 +161,7 @@ resourceExample =
     (Identifier "2" "users" Nothing)
     (User 2 "Julio" "222 W. 22nd St")
     emptyLinks
-    (Relationships $ HM.fromList [("friend", Relationship (Just $ Identifier "3" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
+    (Relationships $ HM.fromList [("friend", Relationship ([Identifier "3" "users" Nothing]) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
     --(Just $ Links $ HM.fromList [("self","/api/users/2"),("friend","/api/users/3")])
     --(Just $ Relationships $ HM.fromList [("friend", Relationship (Just $ Identifier "3" "users" Nothing) (Just $ Links $ HM.fromList [("self","/api/users/3")]))])
 

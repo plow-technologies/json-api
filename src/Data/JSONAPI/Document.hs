@@ -7,7 +7,7 @@ module Data.JSONAPI.Document where
 import           Data.Aeson
 import qualified Data.Foldable as F
 import qualified Data.HashMap.Strict as HM
-import           Data.JSONAPI.Internal.Util ((.=?), (.=@))
+import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@))
 import qualified Data.JSONAPI.Error as E
 import           Data.JSONAPI.Link (Links)
 import           Data.JSONAPI.Meta (Meta)
@@ -33,18 +33,13 @@ instance (ResourcefulEntity a, ToJSON a) => ToJSON (Document a) where
 
 instance (ResourcefulEntity a, FromJSON a) => FromJSON (Document a) where
   parseJSON = withObject "Document" $ \o -> do 
-    let documentData = case HM.lookup "data" o of
-          Just arr@(Array _a)  -> parseJSON arr
-          Just obj@(Object _o) -> (:[]) <$> parseJSON obj
-          _                    -> pure []
-      
-        included = case HM.lookup "included" o of
+    let included = case HM.lookup "included" o of
           Just (Array arr)     -> F.toList arr
           Just obj@(Object _o) -> [obj] -- singleton
           _                    -> []
     
     Document 
-      <$> documentData
+      <$> o .:@ "data"
       <*> o .:? "links"
       <*> o .:? "meta"
       <*> pure included

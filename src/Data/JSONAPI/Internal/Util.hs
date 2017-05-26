@@ -1,7 +1,7 @@
 module Data.JSONAPI.Internal.Util where
 
 import Data.Aeson
-import Data.Aeson.Types (Pair)
+import Data.Aeson.Types (Pair, Parser)
 import qualified Data.HashMap.Strict as HM
 import Data.Text (Text)
 
@@ -28,3 +28,12 @@ infixr 8 .=@
   where 
     lValue = HM.toList hmValue
 infixr 8 .=#
+
+-- | Looking for a single object, an array or objects, or if the key does not 
+-- exist then return an empty list.
+(.:@) :: FromJSON a => Object -> Text -> Parser [a]
+(.:@) o key = 
+  case HM.lookup key o of
+    Just arr@(Array  _a) -> parseJSON arr
+    Just obj@(Object _o) -> (:[]) <$> parseJSON obj
+    _                    -> pure []

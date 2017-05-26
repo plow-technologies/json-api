@@ -7,7 +7,7 @@ import           ArbitraryInstances ()
 import           Control.Arrow ((&&&))
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
-import           Data.Maybe (maybeToList)
+import           Data.Maybe (catMaybes)
 import           Data.Monoid ((<>))
 import           Data.JSONAPI.Document
 import           Data.JSONAPI.Identifier
@@ -105,8 +105,11 @@ instance ResourcefulEntity UserResource where
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
-      friends = (const "friends" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& Just . resourceLinks) <$> urFriends ur
-      boss    = maybeToList ( (const "boss" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& Just . resourceLinks) <$> urBoss ur )
+      friends = [("friends", (Relationship (mkIdentifier <$> urFriends ur) Nothing))]
+      boss    = 
+        case urBoss ur of
+          Nothing  -> []
+          Just bss -> [("boss", (Relationship [mkIdentifier bss] Nothing))]
   toResource ur =
     Resource
       (Identifier (resourceIdentifier ur) (resourceType ur) (resourceMetaData ur))
@@ -137,7 +140,7 @@ instance ResourcefulEntity GroupResource where
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
   resourceMetaData         = const Nothing
-  resourceRelationships gr = Relationships . HM.fromList $ (const "members" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& Just . resourceLinks) <$> grUsers gr
+  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) Nothing))]
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
@@ -153,15 +156,35 @@ mkGroupResourceDocument gr = Document [toResource gr] Nothing Nothing [members]
   where
     members = toJSON (toResource <$> grUsers gr) 
 
-{-    
+
 mkk :: Document GroupResource -> GroupResource
 mkk dc = undefined -- fromResource (dc
   where
     -- memberRelationships = (\(Relationships r) -> lookup "members" r) <$> (resourceRelationships dc)
-    _i = _included dc
-    _data dc -- [Resource a]
-    relationships -- maybe
--}
+    documentIncluded = _included dc
+    _rss = relationships <$> _data dc -- [Resource a]
+    -- (\rs) _rss
+    
+    getUsers :: [Identifier] -> [Value] -> [User]
+    getUsers is vs = fromResource <$> filter (\u -> (Data.JSONAPI.Resource.identifier u) `elem` is) users
+      where
+        users  = catMaybes $ resultToMaybe . fromJSON <$> vs :: [Resource User]
+    -- getIdentifiers :: Resource a -> [Identifier]
+    -- getIdentifiers
+    _mems = (\r -> getUsers (getRelationshipIdentifiers "members" (relationships r)) documentIncluded) <$> _data dc
+
+
+getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]
+getRelationshipIdentifiers t (Relationships rs) =
+  case HM.lookup t rs of
+    Nothing -> []
+    Just r  -> identifiers r
+
+resultToMaybe :: Data.Aeson.Result a -> Maybe a
+resultToMaybe x = 
+  case x of
+    Error _ -> Nothing
+    Data.Aeson.Success a -> Just a
 
 -- document has included
 -- relationship has 
