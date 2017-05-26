@@ -101,16 +101,16 @@ groupResourceResourceExample =
   Resource
     (Identifier "1" "groups" Nothing)
     (GroupResource (Group 1 "test-group") [userExample])
-    Nothing
-    (Just $ Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    emptyLinks
+    (Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
 
 recodedGroupResourceResourceExample :: Resource GroupResource
 recodedGroupResourceResourceExample = 
   Resource
     (Identifier "1" "groups" Nothing)
     (GroupResource (Group 1 "test-group") [])
-    Nothing
-    (Just $ Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    emptyLinks
+    (Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
   
 metaText :: Text
 metaText = "{\"pagination\":{\"currentPage\":1,\"totalPages\":15}}"
@@ -160,8 +160,8 @@ resourceExample =
   Resource
     (Identifier "2" "users" Nothing)
     (User 2 "Julio" "222 W. 22nd St")
-    Nothing
-    (Just $ Relationships $ HM.fromList [("friend", Relationship (Just $ Identifier "3" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
+    emptyLinks
+    (Relationships $ HM.fromList [("friend", Relationship (Just $ Identifier "3" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
     --(Just $ Links $ HM.fromList [("self","/api/users/2"),("friend","/api/users/3")])
     --(Just $ Relationships $ HM.fromList [("friend", Relationship (Just $ Identifier "3" "users" Nothing) (Just $ Links $ HM.fromList [("self","/api/users/3")]))])
 
@@ -170,6 +170,6 @@ resourceWithLinksExample =
   Resource
     (Identifier "2" "users" Nothing)
     userExample
-    (Just $ Links $ HM.fromList [("self",(LinkHref "/api/users/2")),("friend",(LinkHref "/api/users/3"))])
-    Nothing
+    (mkLinks [("self",(LinkHref "/api/users/2")),("friend",(LinkHref "/api/users/3"))])
+    emptyRelationships
 

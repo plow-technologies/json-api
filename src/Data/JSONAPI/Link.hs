@@ -11,6 +11,7 @@ module Data.JSONAPI.Link (
     Link  (..)
   , LinkObject (..)
   , Links (..)
+  , emptyLinks
   , mkLinks
   ) where
 
@@ -57,6 +58,9 @@ Specification: <http://jsonapi.org/format/#document-links>
 
 mkLinks :: [(Text,Link)] -> Links
 mkLinks = Links . HM.fromList
+
+emptyLinks :: Links 
+emptyLinks = Links HM.empty
 
 newtype Links = Links (HM.HashMap Text Link) 
   deriving (Eq, Generic, Read, Show)

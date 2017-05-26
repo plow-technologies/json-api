@@ -5,6 +5,7 @@
 module Data.JSONAPI.Relationship (
    Relationship  (..)
  , Relationships (..)
+ , emptyRelationships
  , mkRelationship
  , mkRelationships
  ) where
@@ -54,3 +55,6 @@ mkRelationship i l   = Just $ Relationship i l
 
 mkRelationships :: Text -> Relationship -> Relationships
 mkRelationships key rel = Relationships $ HM.singleton key rel
+
+emptyRelationships :: Relationships
+emptyRelationships = Relationships HM.empty

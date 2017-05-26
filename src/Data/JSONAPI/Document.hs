@@ -12,6 +12,7 @@ import qualified Data.JSONAPI.Error as E
 import           Data.JSONAPI.Link (Links)
 import           Data.JSONAPI.Meta (Meta)
 import           Data.JSONAPI.Resource
+import           Data.Monoid ((<>))
 
 data (ResourcefulEntity a) => Document a =
   Document 
@@ -47,6 +48,13 @@ instance (ResourcefulEntity a, FromJSON a) => FromJSON (Document a) where
       <*> o .:? "links"
       <*> o .:? "meta"
       <*> pure included
+
+data Included = Included [Value]
+  deriving (Eq, Read, Show)
+  
+instance Monoid Included where
+  mempty = Included []
+  mappend (Included as) (Included bs) = Included (as <> bs)
              
 data ErrorDocument =
   ErrorDocument

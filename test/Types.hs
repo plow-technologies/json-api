@@ -9,6 +9,7 @@ import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.Maybe (maybeToList)
 import           Data.Monoid ((<>))
+import           Data.JSONAPI.Document
 import           Data.JSONAPI.Identifier
 import           Data.JSONAPI.Link
 import           Data.JSONAPI.Meta
@@ -66,16 +67,16 @@ instance Arbitrary Group where
 instance ResourcefulEntity User where
   resourceIdentifier      = T.pack . show . userId
   resourceType            = const "users"
-  resourceLinks      user = Just $ mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ userId user)))]
+  resourceLinks      user = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ userId user)))]
   resourceMetaData        = const Nothing
-  resourceRelationships   = const Nothing
+  resourceRelationships   = const $ Relationships HM.empty
 
 instance ResourcefulEntity Group where
   resourceIdentifier      = T.pack . show . groupId
   resourceType            = const "groups"
-  resourceLinks     group = Just $ mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ groupId group)))]
+  resourceLinks     group = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ groupId group)))]
   resourceMetaData        = const Nothing
-  resourceRelationships   = const Nothing
+  resourceRelationships   = const $ Relationships HM.empty
 
 -- These resource types are used to associate one type with its relationships 
 -- The ToJSON and FromJSON should ignore the relationships
@@ -98,14 +99,14 @@ instance FromJSON UserResource where
 instance ResourcefulEntity UserResource where
   resourceIdentifier       = T.pack . show . userId . urUser
   resourceType             = const "users"
-  resourceLinks         ur = Just $ mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show . userId . urUser $ ur)))]
+  resourceLinks         ur = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show . userId . urUser $ ur)))]
   resourceMetaData         = const Nothing
-  resourceRelationships ur = Just . Relationships . HM.fromList $ friends ++ boss
+  resourceRelationships ur = Relationships . HM.fromList $ friends ++ boss
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
-      friends = (const "friends" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& resourceLinks) <$> urFriends ur
-      boss    = maybeToList ( (const "boss" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& resourceLinks) <$> urBoss ur )
+      friends = (const "friends" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& Just . resourceLinks) <$> urFriends ur
+      boss    = maybeToList ( (const "boss" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& Just . resourceLinks) <$> urBoss ur )
   toResource ur =
     Resource
       (Identifier (resourceIdentifier ur) (resourceType ur) (resourceMetaData ur))
@@ -134,9 +135,9 @@ instance Arbitrary GroupResource where
 instance ResourcefulEntity GroupResource where
   resourceIdentifier       = T.pack . show . groupId . grGroup
   resourceType             = const "groups"
-  resourceLinks         gr = Just $ mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
+  resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
   resourceMetaData         = const Nothing
-  resourceRelationships gr = Just . Relationships . HM.fromList $ (const "members" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& resourceLinks) <$> grUsers gr
+  resourceRelationships gr = Relationships . HM.fromList $ (const "members" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& Just . resourceLinks) <$> grUsers gr
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
@@ -146,7 +147,34 @@ instance ResourcefulEntity GroupResource where
       (gr { grUsers = [] } )
       (resourceLinks gr)
       (resourceRelationships gr)
+      
+mkGroupResourceDocument :: GroupResource -> Document GroupResource
+mkGroupResourceDocument gr = Document [toResource gr] Nothing Nothing [members]
+  where
+    members = toJSON (toResource <$> grUsers gr) 
+
+{-    
+mkk :: Document GroupResource -> GroupResource
+mkk dc = undefined -- fromResource (dc
+  where
+    -- memberRelationships = (\(Relationships r) -> lookup "members" r) <$> (resourceRelationships dc)
+    _i = _included dc
+    _data dc -- [Resource a]
+    relationships -- maybe
+-}
+
+-- document has included
+-- relationship has 
 {-
+documentUserResourceExample :: Document UserResource
+documentUserResourceExample = 
+  Document
+    [toResource userResourceExample]
+    Nothing 
+    Nothing 
+    []
+
+
 fromResource :: Resource a -> a
 fromResource = resource
 
