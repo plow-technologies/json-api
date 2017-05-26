@@ -1,9 +1,10 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module ArbitraryInstances where
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI.Document
-import           Data.JSONAPI.Error
 import           Data.JSONAPI.Identifier
 import           Data.JSONAPI.Link
 import           Data.JSONAPI.Meta
@@ -30,8 +31,8 @@ instance Arbitrary Link where
 instance Arbitrary Links where
   arbitrary = do 
     i     <- choose (0,10)
-    links <- vector i :: Gen [(Text,Link)]
-    return $ Links (HM.fromList links)
+    lnks  <- vector i :: Gen [(Text,Link)]
+    return $ Links (HM.fromList lnks)
 
 instance Arbitrary Relationship where
   arbitrary = Relationship <$> arbitrary <*> arbitrary
@@ -39,8 +40,8 @@ instance Arbitrary Relationship where
 instance Arbitrary Relationships where
   arbitrary =  do
     i             <- choose (0,10)
-    relationships <- vector i :: Gen [(Text,Relationship)]
-    return $ Relationships (HM.fromList relationships)
+    rlationships  <- vector i :: Gen [(Text,Relationship)]
+    return $ Relationships (HM.fromList rlationships)
         
 instance Arbitrary Text where
   arbitrary = T.pack <$> arbitrary

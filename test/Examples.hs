@@ -1,11 +1,8 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Example where
+module Examples where
 
-import           ArbitraryInstances
-import           Control.Arrow ((&&&))
-import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.Monoid ((<>))
 import           Data.JSONAPI.Document
@@ -14,13 +11,11 @@ import           Data.JSONAPI.Link
 import           Data.JSONAPI.Meta
 import           Data.JSONAPI.Relationship
 import           Data.JSONAPI.Resource
-import qualified Data.Text as T
 import           Data.Text (Text)
 
-import           GHC.Generics (Generic)
+import           Types
 
-import           Test.QuickCheck
-
+-- document examples
 
 documentText :: Text
 documentText = "{\"data\":{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}}"
@@ -54,6 +49,14 @@ user2Example :: User
 user2Example =
   User 3 "Jordi" "333 W. 33rd St"
 
+friendExample :: User
+friendExample =
+  User 4 "Johnson" "11 E. 11st St"
+
+bossExample :: User
+bossExample =
+  User 5 "Smurphy" "44 N. 44th St"
+    
 documentGroupResourceText :: Text
 documentGroupResourceText = 
   "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/2\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
@@ -65,6 +68,21 @@ documentGroupResourceExample =
     Nothing 
     Nothing 
     []
+
+documentUserResourceText :: Text
+documentUserResourceText = 
+  "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/4\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/5\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
+
+documentUserResourceExample :: Document UserResource
+documentUserResourceExample = 
+  Document
+    [toResource userResourceExample]
+    Nothing 
+    Nothing 
+    []
+
+userResourceExample :: UserResource
+userResourceExample = UserResource userExample [friendExample] (Just bossExample)
 
 groupExample :: Group
 groupExample = Group 1 "test-group"
@@ -93,14 +111,6 @@ recodedGroupResourceResourceExample =
     (GroupResource (Group 1 "test-group") [])
     Nothing
     (Just $ Relationships $ HM.fromList [("members", Relationship (Just $ Identifier "2" "users" Nothing) (Just $ Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
-
-{-
-Resource 
-  { identifier    :: Identifier
-  , resource      :: a
-  , links         :: Maybe Links
-  , relationships :: Maybe Relationships
--}
   
 metaText :: Text
 metaText = "{\"pagination\":{\"currentPage\":1,\"totalPages\":15}}"
@@ -163,122 +173,3 @@ resourceWithLinksExample =
     (Just $ Links $ HM.fromList [("self",(LinkHref "/api/users/2")),("friend",(LinkHref "/api/users/3"))])
     Nothing
 
-data Pagination = 
-  Pagination
-    { currentPage :: Int
-    , totalPages :: Int
-    } deriving (Eq,Read,Show)
-
-instance ToJSON Pagination where
-  toJSON (Pagination c t) =
-    object
-      [ "currentPage" .= c
-      , "totalPages"  .= t
-      ]
-      
-instance MetaObject Pagination where
-  typeName _ = "pagination"
-  
-data User =
-  User
-    { userId      :: Int
-    , userName    :: Text
-    , userAddress :: Text
-    } deriving (Eq,Generic,Read,Show)
-    
-instance ToJSON User
-instance FromJSON User
-
-instance Arbitrary User where
-  arbitrary = User <$> arbitrary <*> arbitrary <*> arbitrary
-  
-data Group =
-  Group 
-    { groupId   :: Int
-    , groupName :: Text
-    } deriving (Eq, Generic, Read, Show)
-
-instance ToJSON Group
-instance FromJSON Group
-
-instance Arbitrary Group where
-  arbitrary = Group <$> arbitrary <*> arbitrary
-  
-instance ResourcefulEntity User where
-  resourceIdentifier      = T.pack . show . userId
-  resourceType            = const "users"
-  resourceLinks      user = Just $ mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ userId user)))]
-  resourceMetaData        = const Nothing
-  resourceRelationships   = const Nothing
-
-instance ResourcefulEntity Group where
-  resourceIdentifier      = T.pack . show . groupId
-  resourceType            = const "groups"
-  resourceLinks     group = Just $ mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ groupId group)))]
-  resourceMetaData        = const Nothing
-  resourceRelationships   = const Nothing
-
-data GroupResource =
-  GroupResource 
-    { grGroup :: Group
-    , grUsers :: [User]
-    } deriving (Eq, Generic, Read, Show)
-
-instance ToJSON GroupResource where
-  toJSON (GroupResource g _us) = toJSON g
-  
-instance FromJSON GroupResource where
-  parseJSON o = --  withObject "GroupResource" $ \o ->
-    GroupResource <$> parseJSON o <*> pure []
-
-instance Arbitrary GroupResource where
-  arbitrary = do
-    i <- choose (1,5)
-    GroupResource <$> arbitrary <*> vector i
-
-instance ResourcefulEntity GroupResource where
-  resourceIdentifier       = T.pack . show . groupId . grGroup
-  resourceType             = const "groups"
-  resourceLinks         gr = Just $ mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
-  resourceMetaData         = const Nothing
-  resourceRelationships gr = Just . Relationships . HM.fromList $ (const "members" &&& id) . (uncurry Relationship) . (Just . mkIdentifier &&& resourceLinks) <$> grUsers gr
-    where
-      mkIdentifier user =
-        Identifier (resourceIdentifier user) (resourceType user) Nothing
-  toResource gr =
-    Resource
-      (Identifier (resourceIdentifier gr) (resourceType gr) (resourceMetaData gr))
-      (gr { grUsers = [] } )
-      (resourceLinks gr)
-      (resourceRelationships gr)
-{-
-fromResource :: Resource a -> a
-fromResource = resource
-
-toResource :: a -> Resource a
-toResource a =
-  Resource
-    (Identifier (resourceIdentifier a) (resourceType a) (resourceMetaData a))
-    a
-    (resourceLinks a)
-    (resourceRelationships a)
-
-class (ToJSON a, FromJSON a) => ResourcefulEntity a where
-  resourceIdentifier    :: a -> Text
-  resourceType          :: a -> Text
-  resourceLinks         :: a -> Maybe Links
-  resourceMetaData      :: a -> Maybe Meta
-  resourceRelationships :: a -> Maybe Relationships
-
-  fromResource :: Resource a -> a
-  fromResource = resource
-
-  toResource :: a -> Resource a
-  toResource a =
-    Resource
-      (Identifier (resourceIdentifier a) (resourceType a) (resourceMetaData a))
-      a
-      (resourceLinks a)
-      (resourceRelationships a)
-
--}

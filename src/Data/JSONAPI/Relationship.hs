@@ -6,6 +6,7 @@ module Data.JSONAPI.Relationship (
    Relationship  (..)
  , Relationships (..)
  , mkRelationship
+ , mkRelationships
  ) where
 
 import           Data.Aeson

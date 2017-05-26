@@ -12,7 +12,6 @@ import GHC.Generics (Generic)
 import Data.JSONAPI.Link (Links)
 import Data.JSONAPI.Meta
 import Data.JSONAPI.Internal.Util ((.=?))
-import Data.Text (Text)
 import Prelude hiding (id)
 
 data Error =

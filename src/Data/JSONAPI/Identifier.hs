@@ -14,7 +14,6 @@ module Data.JSONAPI.Identifier (
  ) where
 
 import           Data.Aeson
-import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI.Internal.Util ((.=?))
 import           Data.JSONAPI.Meta (Meta)
 import           Data.Text (Text)

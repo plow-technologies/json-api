@@ -33,14 +33,14 @@ instance (ResourcefulEntity a, ToJSON a) => ToJSON (Document a) where
 instance (ResourcefulEntity a, FromJSON a) => FromJSON (Document a) where
   parseJSON = withObject "Document" $ \o -> do 
     let documentData = case HM.lookup "data" o of
-          Just a@(Array _a)  -> parseJSON a
-          Just o@(Object _o) -> (:[]) <$> parseJSON o
-          _                  -> pure []
+          Just arr@(Array _a)  -> parseJSON arr
+          Just obj@(Object _o) -> (:[]) <$> parseJSON obj
+          _                    -> pure []
       
         included = case HM.lookup "included" o of
-          Just (Array a)     -> F.toList a
-          Just o@(Object _o) -> [o] -- singleton
-          _                  -> []
+          Just (Array arr)     -> F.toList arr
+          Just obj@(Object _o) -> [obj] -- singleton
+          _                    -> []
     
     Document 
       <$> documentData

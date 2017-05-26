@@ -10,7 +10,6 @@ import Data.JSONAPI.Link (Links)
 import Data.JSONAPI.Meta (Meta)
 import Data.JSONAPI.Relationship (Relationships)
 import Data.Text (Text)
-import GHC.Generics (Generic)
 
 data Resource a =
   Resource 
@@ -30,10 +29,10 @@ instance (ToJSON a) => ToJSON (Resource a) where
       
 instance (FromJSON a) => FromJSON (Resource a) where
   parseJSON = withObject "Resource" $ \o -> do
-    identifier <- Identifier <$> o .:  "id"
-                             <*> o .:  "type"
-                             <*> o .:? "meta"
-    Resource <$> pure identifier
+    idntifier <- Identifier <$> o .:  "id"
+                            <*> o .:  "type"
+                            <*> o .:? "meta"
+    Resource <$> pure idntifier
              <*> o .:  "attributes"
              <*> o .:? "links"
              <*> o .:? "relationships"
