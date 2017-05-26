@@ -6,15 +6,15 @@ module Data.JSONAPI.Relationship (
    Relationship  (..)
  , Relationships (..)
  , emptyRelationships
- , mkRelationship
- , mkRelationships
+-- , mkRelationship
+-- , mkRelationships
  ) where
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
-import           Data.JSONAPI.Internal.Util ((.=?),(.=@),(.:@))
+import           Data.JSONAPI.Internal.Util ((.=@),(.:@),(.=#))
 import           Data.JSONAPI.Identifier (Identifier (..))
-import           Data.JSONAPI.Link (Links)
+import           Data.JSONAPI.Link (Links(..), emptyLinks)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
@@ -23,17 +23,21 @@ import           GHC.Generics (Generic)
 data Relationship =
   Relationship
     { identifiers :: [Identifier] -- can be multiple
-    , links       :: Maybe Links
+    , links       :: Links
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON Relationship where
-  toJSON (Relationship {..}) =
-    object ("data" .=@ identifiers ++ "links" .=? links)
+  toJSON (Relationship idntifiers (Links lnks)) =
+    object ("data" .=@ idntifiers ++ "links" .=# lnks)
 
 instance FromJSON Relationship where
-  parseJSON = withObject "Relationship" $ \o ->    
+  parseJSON = withObject "Relationship" $ \o -> do
+    mLnks <- o .:? "links"
+    let lnks = case mLnks of 
+          Nothing    -> emptyLinks
+          Just jlnks -> jlnks
     Relationship <$> o .:@ "data"
-                 <*> o .:? "links"
+                 <*> pure lnks
 
 newtype Relationships = Relationships (HM.HashMap Text Relationship)
   deriving (Eq, Generic, Read, Show)
@@ -49,12 +53,13 @@ instance Monoid Relationships where
   mappend (Relationships a) (Relationships b) = Relationships $ HM.union a b
   mempty = Relationships $ HM.empty
 
+{-
 mkRelationship :: [Identifier] -> Maybe Links -> Maybe Relationship
 mkRelationship [] Nothing = Nothing 
 mkRelationship i l   = Just $ Relationship i l
 
 mkRelationships :: Text -> Relationship -> Relationships
 mkRelationships key rel = Relationships $ HM.singleton key rel
-
+-}
 emptyRelationships :: Relationships
 emptyRelationships = Relationships HM.empty

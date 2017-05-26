@@ -4,7 +4,6 @@
 module Types where
   
 import           ArbitraryInstances ()
-import           Control.Arrow ((&&&))
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.Maybe (catMaybes)
@@ -105,11 +104,11 @@ instance ResourcefulEntity UserResource where
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
-      friends = [("friends", (Relationship (mkIdentifier <$> urFriends ur) Nothing))]
+      friends = [("friends", (Relationship (mkIdentifier <$> urFriends ur) emptyLinks))]
       boss    = 
         case urBoss ur of
           Nothing  -> []
-          Just bss -> [("boss", (Relationship [mkIdentifier bss] Nothing))]
+          Just bss -> [("boss", (Relationship [mkIdentifier bss] emptyLinks))]
   toResource ur =
     Resource
       (Identifier (resourceIdentifier ur) (resourceType ur) (resourceMetaData ur))
@@ -140,7 +139,7 @@ instance ResourcefulEntity GroupResource where
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
   resourceMetaData         = const Nothing
-  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) Nothing))]
+  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) emptyLinks))]
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
