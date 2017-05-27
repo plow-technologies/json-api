@@ -7,12 +7,14 @@ module Data.JSONAPI.Document where
 import           Data.Aeson
 import qualified Data.Foldable as F
 import qualified Data.HashMap.Strict as HM
-import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@))
+import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.=@!), (.:@))
 import qualified Data.JSONAPI.Error as E
 import           Data.JSONAPI.Link (Links)
 import           Data.JSONAPI.Meta (Meta)
 import           Data.JSONAPI.Resource
 import           Data.Monoid ((<>))
+
+import qualified Data.Vector as V
 
 data (ResourcefulEntity a) => Document a =
   Document 
@@ -26,23 +28,32 @@ instance (ResourcefulEntity a, ToJSON a) => ToJSON (Document a) where
   toJSON (Document {..}) =
     object 
       (     "data"     .=@ _data
-        ++  "included" .=@ _included
+        ++  "included" .=@! _included
         ++  "links"    .=? _links
         ++  "meta"     .=? _meta
-      )
-
+      ) 
+{-      
+    where
+      included = 
+        case length _included of
+          0 -> []
+          _ -> ["included" .= _included] 
+  --          where
+-}              
 instance (ResourcefulEntity a, FromJSON a) => FromJSON (Document a) where
   parseJSON = withObject "Document" $ \o -> do 
-    let included = case HM.lookup "included" o of
-          Just (Array arr)     -> F.toList arr
-          Just obj@(Object _o) -> [obj] -- singleton
-          _                    -> []
     
+    let included = case HM.lookup "included" o of
+          Just a@(Array arr) -> [a]
+          _                  -> []
+          -- Just obj@(Object _o) -> []--  [toJSON [toJSON [obj]]] -- singleton
+              
     Document 
       <$> o .:@ "data"
       <*> o .:? "links"
       <*> o .:? "meta"
       <*> pure included
+      -- <*> o .: "included"
 
 data Included = Included [Value]
   deriving (Eq, Read, Show)

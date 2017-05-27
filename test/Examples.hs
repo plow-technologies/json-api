@@ -59,16 +59,20 @@ bossExample =
     
 documentGroupResourceText :: Text
 documentGroupResourceText = 
-  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
+  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":[{\"id\":\"2\",\"type\":\"users\"},{\"id\":\"3\",\"type\":\"users\"}]}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}},\"included\":[{\"attributes\":{\"userAddress\":\"222 W. 22nd St\",\"userName\":\"Julio\",\"userId\":2},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}},{\"attributes\":{\"userAddress\":\"333 W. 33rd St\",\"userName\":\"Jordi\",\"userId\":3},\"id\":\"3\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/3\"}}]}"
+
+--  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}},\"included\":[{\"attributes\":{\"userAddress\":\"222 W. 22nd St\",\"userName\":\"Julio\",\"userId\":2},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}]}"
+--  "{\"included\":[{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}],\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
 
 documentGroupResourceExample :: Document GroupResource
-documentGroupResourceExample = 
+documentGroupResourceExample = mkGroupResourceDocument groupResourceExample
+{-
   Document
     [toResource groupResourceExample]
     Nothing 
     Nothing 
     []
-
+-}
 documentUserResourceText :: Text
 documentUserResourceText = 
   "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
@@ -88,7 +92,7 @@ groupExample :: Group
 groupExample = Group 1 "test-group"
 
 groupResourceExample :: GroupResource
-groupResourceExample = GroupResource groupExample [userExample]
+groupResourceExample = GroupResource groupExample [userExample,user2Example]
 
 groupResourceResourceText :: Text
 groupResourceResourceText = 

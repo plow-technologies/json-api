@@ -155,22 +155,21 @@ mkGroupResourceDocument gr = Document [toResource gr] Nothing Nothing [members]
   where
     members = toJSON (toResource <$> grUsers gr) 
 
-
-mkk :: Document GroupResource -> GroupResource
-mkk dc = undefined -- fromResource (dc
+mkk :: Document GroupResource -> [GroupResource]
+mkk dc = mems
   where
-    -- memberRelationships = (\(Relationships r) -> lookup "members" r) <$> (resourceRelationships dc)
     documentIncluded = _included dc
     _rss = relationships <$> _data dc -- [Resource a]
-    -- (\rs) _rss
     
     getUsers :: [Identifier] -> [Value] -> [User]
     getUsers is vs = fromResource <$> filter (\u -> (Data.JSONAPI.Resource.identifier u) `elem` is) users
       where
         users  = catMaybes $ resultToMaybe . fromJSON <$> vs :: [Resource User]
-    -- getIdentifiers :: Resource a -> [Identifier]
-    -- getIdentifiers
-    _mems = (\r -> getUsers (getRelationshipIdentifiers "members" (relationships r)) documentIncluded) <$> _data dc
+    
+    updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (relationships r)) documentIncluded }
+      where
+        groupR = fromResource r 
+    mems = updateResource <$> _data dc
 
 
 getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]

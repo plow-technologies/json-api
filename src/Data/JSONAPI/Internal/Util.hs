@@ -20,6 +20,13 @@ infixr 8 .=?
     _ -> [name .= lValue]
 infixr 8 .=@
 
+(.=@!) :: ToJSON a => Text -> [a] -> [Pair]
+(.=@!) name lValue =
+  case length lValue of
+    0 -> []
+    _ -> [name .= lValue]
+infixr 8 .=@!
+
 (.=#) :: ToJSON b => Text -> HM.HashMap Text b -> [Pair]
 (.=#) name hmValue =
   case length lValue of

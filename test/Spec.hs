@@ -41,6 +41,8 @@ jsonTextHaskellValuePairSpec jsonText haskellValue =
 main :: IO ()
 main = do
   hspec $ do
+    jsonTextHaskellValuePairSpec documentGroupResourceText documentGroupResourceExample    
+    {-
     jsonTextHaskellValuePairSpec documentText documentExample
     jsonTextHaskellValuePairSpec documentMultiResourceText documentMultiResourceExample
     jsonTextHaskellValuePairSpec documentGroupResourceText documentGroupResourceExample
@@ -63,3 +65,4 @@ main = do
     roundtripSpecs (Proxy :: Proxy Relationship)
     roundtripSpecs (Proxy :: Proxy (Resource Group))    
     roundtripSpecs (Proxy :: Proxy (Resource User))
+    -}

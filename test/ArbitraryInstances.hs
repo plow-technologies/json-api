@@ -57,9 +57,10 @@ instance Arbitrary Value where
 instance Arbitrary a => Arbitrary (Resource a) where
   arbitrary = Resource <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
+{-
 instance (ResourcefulEntity a, Arbitrary a) => Arbitrary (Document a) where
   arbitrary = do
     resourceSize <- choose (1,3)
     includeSize  <- choose (0,3)
     Document <$> vector resourceSize <*> arbitrary <*> arbitrary <*> vector includeSize
-    
+    -}
