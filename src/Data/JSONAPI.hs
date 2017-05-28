@@ -1,7 +1,8 @@
 module Data.JSONAPI (
  -- Types
  -- on the right side is a list of each type's internal dependency
-   Document(..)      -- Resource, Relationship, Link, Identifier, Meta
+   Document(..)      -- Resource, Relationship, Link, Identifier, Meta, Included
+ , Included (..)
  , ErrorDocument(..) -- Error, Link, Meta
  , Error(..)         -- Link, Meta
  , Resource(..)      -- Identifier, Link, Meta, Relationship
@@ -15,6 +16,7 @@ module Data.JSONAPI (
  
  -- Constructors
  , mkLinks
+ , mkIncluded
  , mkMeta
  
  -- Values

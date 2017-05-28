@@ -21,7 +21,7 @@ documentExample =
     [toResource userExample]
     Nothing
     Nothing 
-    []
+    Nothing
 
 documentMultiResourceText :: Text
 documentMultiResourceText = 
@@ -34,7 +34,7 @@ documentMultiResourceExample =
     [toResource userExample, toResource user2Example]
     Nothing
     Nothing 
-    []
+    Nothing
 
 userExample :: User
 userExample =
@@ -60,14 +60,8 @@ documentGroupResourceText =
 --  "{\"included\":[{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}],\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
 
 documentGroupResourceExample :: Document GroupResource
-documentGroupResourceExample = mkGroupResourceDocument groupResourceExample
-{-
-  Document
-    [toResource groupResourceExample]
-    Nothing 
-    Nothing 
-    []
--}
+documentGroupResourceExample = toDocument [groupResourceExample]
+
 documentUserResourceText :: Text
 documentUserResourceText = 
   "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
@@ -78,7 +72,7 @@ documentUserResourceExample =
     [toResource userResourceExample]
     Nothing 
     Nothing 
-    []
+    Nothing
 
 userResourceExample :: UserResource
 userResourceExample = UserResource userExample [friendExample] (Just bossExample)

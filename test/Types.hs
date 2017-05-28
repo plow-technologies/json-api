@@ -16,6 +16,8 @@ import           GHC.Generics (Generic)
 
 import           Test.QuickCheck
 
+import qualified Data.Vector as V
+
 -- A collection of sample types for testing
 data Pagination = 
   Pagination
@@ -144,27 +146,28 @@ instance ResourceEntity GroupResource where
       (gr { grUsers = [] } )
       (resourceLinks gr)
       (resourceRelationships gr)
-      
-mkGroupResourceDocument :: GroupResource -> Document GroupResource
-mkGroupResourceDocument gr = Document [toResource gr] Nothing Nothing [members]
-  where
-    members = toJSON (toResource <$> grUsers gr) 
 
-mkk :: Document GroupResource -> [GroupResource]
-mkk dc = mems
-  where
-    documentIncluded = docIncluded dc
-    
-    getUsers :: [Identifier] -> [Value] -> [User]
-    getUsers is vs = fromResource <$> filter (\u -> (rsIdentifier u) `elem` is) users
+instance DocumentEntity GroupResource where
+  toDocument grs = Document (toResource <$> grs) Nothing Nothing (Just members)
       where
-        users  = catMaybes $ resultToMaybe . fromJSON <$> vs :: [Resource User]
-    
-    updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (rsRelationships r)) documentIncluded }
-      where
-        groupR = fromResource r 
-    mems = updateResource <$> docData dc
+        members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs) 
+  
+  fromDocument doc = updateResource <$> docData doc
+    where      
+      getUsers :: [Identifier] -> Maybe Included -> [User]
+      getUsers is mvs = fromResource <$> filter (\u -> (rsIdentifier u) `elem` is) users
+        where
+          parseUsers :: Included -> [Resource User] 
+          parseUsers (Included arr) = catMaybes $ V.toList $ resultToMaybe . fromJSON <$> arr
+          
+          users = 
+            case mvs of
+              Nothing -> []
+              Just vs -> parseUsers vs
 
+      updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (rsRelationships r)) (docIncluded doc) }
+        where
+          groupR = fromResource r 
 
 getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]
 getRelationshipIdentifiers t (Relationships rs) =

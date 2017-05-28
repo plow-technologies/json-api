@@ -8,9 +8,17 @@ import           Data.JSONAPI
 import qualified Data.Text as T
 import           Data.Text (Text)
 import           Test.QuickCheck
+import qualified Data.Vector as V
   
 instance Arbitrary Meta where
-  arbitrary = Meta <$> (HM.fromList <$> arbitrary)
+  arbitrary = do
+    i     <- choose (1,3)
+    Meta <$> (HM.fromList <$> vector i)
+
+instance Arbitrary Included where
+  arbitrary = do
+    i     <- choose (1,3)
+    Included <$> (V.fromList <$> vector i)
 
 instance Arbitrary Identifier where
   arbitrary = Identifier <$> arbitrary <*> arbitrary <*> arbitrary
@@ -56,5 +64,4 @@ instance Arbitrary a => Arbitrary (Resource a) where
 instance (ResourceEntity a, Arbitrary a) => Arbitrary (Document a) where
   arbitrary = do
     resourceSize <- choose (1,3)
-    includeSize  <- choose (0,3)
-    Document <$> vector resourceSize <*> arbitrary <*> arbitrary <*> vector includeSize
+    Document <$> vector resourceSize <*> arbitrary <*> arbitrary <*> arbitrary

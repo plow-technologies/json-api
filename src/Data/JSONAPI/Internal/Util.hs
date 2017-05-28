@@ -38,7 +38,7 @@ mkPairOnlyIfListNotEmpty = (.=@!)
 (.=@!) name lValue =
   case length lValue of
     0 -> []
-    _ -> [name .= lValue]
+    _ -> [name .= (toJSON <$> lValue)]
 infixr 8 .=@!
 
 -- avoid {key:null} if HashMap is []

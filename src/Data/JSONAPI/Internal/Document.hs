@@ -6,26 +6,40 @@ module Data.JSONAPI.Internal.Document (
     Document (..)
   , DocumentEntity (..)
   , ErrorDocument (..)
+  , Included (..)
+  , includedEmpty
+  , mkIncluded
   ) where
 
 import           Data.Aeson
-import qualified Data.Foldable as F
-import qualified Data.HashMap.Strict as HM
+import           GHC.Generics (Generic)
 import qualified Data.JSONAPI.Internal.Error as E
 import           Data.JSONAPI.Internal.Link (Links)
 import           Data.JSONAPI.Internal.Meta (Meta)
 import           Data.JSONAPI.Internal.Resource
-import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.=@!), (.:@))
-import           Data.Monoid ((<>))
-
+import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@))
 import qualified Data.Vector as V
+
+newtype Included = Included Array deriving (Eq, Generic, Read, Show)
+
+instance ToJSON Included where
+  toJSON (Included arr) = toJSON arr
+
+instance FromJSON Included where
+  parseJSON = withArray "Included" $ \arr -> return $ Included arr
+
+includedEmpty :: Included
+includedEmpty = Included $ V.empty
+
+mkIncluded :: ToJSON a => [a] -> Included
+mkIncluded as = Included . V.fromList $ toJSON <$> as
 
 data (ResourceEntity a) => Document a =
   Document 
     { docData      :: [Resource a] -- should never be empty
     , docLinks     :: Maybe Links
     , docMeta      :: Maybe Meta
-    , docIncluded  :: [Value] -- if exists should be (Array [Object, Object,...])
+    , docIncluded  :: Maybe Included -- [Value] -- if exists should be (Array [Object, Object,...])
     } deriving (Eq, Read, Show)
 
 instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
@@ -34,20 +48,21 @@ instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
       (     "data"     .=@  _docData
         ++  "links"    .=?  _docLinks
         ++  "meta"     .=?  _docMeta
-        ++  "included" .=@! _docIncluded
+        ++  "included" .=? _docIncluded
       ) 
            
 instance (ResourceEntity a, FromJSON a) => FromJSON (Document a) where
-  parseJSON = withObject "Document" $ \o -> do     
+  parseJSON = withObject "Document" $ \o ->
+    {-
     let included = case HM.lookup "included" o of
-          Just a@(Array arr) -> [a]
-          _                  -> []
-              
+          Just (Array arr) -> F.toList arr
+          _                -> []
+    -}
     Document 
       <$> o .:@ "data"
       <*> o .:? "links"
       <*> o .:? "meta"
-      <*> pure included
+      <*> o .:? "included"
              
 data ErrorDocument =
   ErrorDocument
