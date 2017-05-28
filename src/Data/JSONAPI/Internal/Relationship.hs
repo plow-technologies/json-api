@@ -1,20 +1,17 @@
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 
-module Data.JSONAPI.Relationship (
+module Data.JSONAPI.Internal.Relationship (
    Relationship  (..)
  , Relationships (..)
  , emptyRelationships
--- , mkRelationship
--- , mkRelationships
  ) where
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
+import           Data.JSONAPI.Internal.Identifier (Identifier (..))
+import           Data.JSONAPI.Internal.Link (Links(..), emptyLinks)
 import           Data.JSONAPI.Internal.Util ((.=@),(.:@),(.=#))
-import           Data.JSONAPI.Identifier (Identifier (..))
-import           Data.JSONAPI.Link (Links(..), emptyLinks)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
@@ -22,13 +19,13 @@ import           GHC.Generics (Generic)
 
 data Relationship =
   Relationship
-    { identifiers :: [Identifier] -- can be multiple
-    , links       :: Links
+    { rlIdentifiers :: [Identifier] -- can be multiple
+    , rlLinks       :: Links
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON Relationship where
-  toJSON (Relationship idntifiers (Links lnks)) =
-    object ("data" .=@ idntifiers ++ "links" .=# lnks)
+  toJSON (Relationship rlIdntifiers (Links lnks)) =
+    object ("data" .=@ rlIdntifiers ++ "links" .=# lnks)
 
 instance FromJSON Relationship where
   parseJSON = withObject "Relationship" $ \o -> do
@@ -53,13 +50,5 @@ instance Monoid Relationships where
   mappend (Relationships a) (Relationships b) = Relationships $ HM.union a b
   mempty = Relationships $ HM.empty
 
-{-
-mkRelationship :: [Identifier] -> Maybe Links -> Maybe Relationship
-mkRelationship [] Nothing = Nothing 
-mkRelationship i l   = Just $ Relationship i l
-
-mkRelationships :: Text -> Relationship -> Relationships
-mkRelationships key rel = Relationships $ HM.singleton key rel
--}
 emptyRelationships :: Relationships
 emptyRelationships = Relationships HM.empty

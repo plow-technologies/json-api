@@ -1,32 +1,38 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Data.JSONAPI.Resource where
+module Data.JSONAPI.Internal.Resource (
+   Resource (..)
+ , ResourceEntity (..)
+ ) where
 
 import Data.Aeson
--- import qualified Data.HashMap.Strict as HM
+import Data.JSONAPI.Internal.Identifier (Identifier(..), HasIdentifier(..))
+import Data.JSONAPI.Internal.Link (Links(..), emptyLinks)
+import Data.JSONAPI.Internal.Meta (Meta)
+import Data.JSONAPI.Internal.Relationship (Relationships(..), emptyRelationships)
 import Data.JSONAPI.Internal.Util ((.=?), (.=#))
-import Data.JSONAPI.Identifier (Identifier(..), HasIdentifier(..))
-import Data.JSONAPI.Link (Links(..), emptyLinks)
-import Data.JSONAPI.Meta (Meta)
-import Data.JSONAPI.Relationship (Relationships(..), emptyRelationships)
 import Data.Text (Text)
 
 data Resource a =
   Resource 
-    { identifier    :: Identifier
-    , resource      :: a
-    , links         :: Links         -- (Links HM.HashMap) can be empty
-    , relationships :: Relationships -- (Relationships HM.HashMap) can be empty
+    { rsIdentifier    :: Identifier
+    , rsResource      :: a
+    , rsLinks         :: Links         -- (Links HM.HashMap) can be empty
+    , rsRelationships :: Relationships -- (Relationships HM.HashMap) can be empty
     } deriving (Eq, Read, Show)
 
 instance (ToJSON a) => ToJSON (Resource a) where
   toJSON (Resource (Identifier resId resType metaObj) resObj (Links linksObj) (Relationships rels)) = 
     object (
-      [ "id"            .= resId
-      , "type"          .= resType
-      , "attributes"    .= resObj
-      ] ++ "meta" .=? metaObj ++ "links" .=# linksObj ++ "relationships" .=# rels)
+      [ "id"             .= resId
+      , "type"           .= resType
+      , "attributes"     .= resObj
+      ] 
+      ++ "meta"          .=? metaObj 
+      ++ "links"         .=# linksObj 
+      ++ "relationships" .=# rels
+    )
       
 instance (FromJSON a) => FromJSON (Resource a) where
   parseJSON = withObject "Resource" $ \o -> do
@@ -47,9 +53,9 @@ instance (FromJSON a) => FromJSON (Resource a) where
              <*> pure rsps
 
 instance HasIdentifier (Resource a) where
-  identifier = Data.JSONAPI.Resource.identifier
+  identifier = rsIdentifier
 
-class (ToJSON a, FromJSON a) => ResourcefulEntity a where
+class (ToJSON a, FromJSON a) => ResourceEntity a where
   resourceIdentifier    :: a -> Text
   resourceType          :: a -> Text
   resourceLinks         :: a -> Links
@@ -57,7 +63,7 @@ class (ToJSON a, FromJSON a) => ResourcefulEntity a where
   resourceRelationships :: a -> Relationships
 
   fromResource :: Resource a -> a
-  fromResource = resource
+  fromResource = rsResource
 
   toResource :: a -> Resource a
   toResource a =

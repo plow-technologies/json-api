@@ -1,31 +1,30 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 
-module Data.JSONAPI.Error (
+module Data.JSONAPI.Internal.Error (
    Error (..)
  ) where
 
 import Data.Aeson hiding (Error)
 import Data.Text
 import GHC.Generics (Generic)
-import Data.JSONAPI.Link (Links)
-import Data.JSONAPI.Meta
+import Data.JSONAPI.Internal.Link (Links)
+import Data.JSONAPI.Internal.Meta
 import Data.JSONAPI.Internal.Util ((.=?))
 import Prelude hiding (id)
 
 data Error =
   Error
-    { id     :: Maybe Text
-    , links  :: Maybe Links
-    , status :: Maybe Text
-    , code   :: Maybe Text
-    , detail :: Maybe Text
-    , meta   :: Maybe Meta
+    { errId     :: Maybe Text
+    , errLinks  :: Maybe Links
+    , errStatus :: Maybe Text
+    , errCode   :: Maybe Text
+    , errDetail :: Maybe Text
+    , errMeta   :: Maybe Meta
     } deriving (Eq, Generic, Read, Show)
     
 instance ToJSON Error where
-  toJSON (Error {..}) =
+  toJSON (Error id links status code detail meta) =
     object 
       (  "id"     .=? id
       ++ "links"  .=? links

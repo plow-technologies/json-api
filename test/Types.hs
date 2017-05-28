@@ -8,12 +8,7 @@ import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.Maybe (catMaybes)
 import           Data.Monoid ((<>))
-import           Data.JSONAPI.Document
-import           Data.JSONAPI.Identifier
-import           Data.JSONAPI.Link
-import           Data.JSONAPI.Meta
-import           Data.JSONAPI.Relationship
-import           Data.JSONAPI.Resource
+import           Data.JSONAPI hiding (Error(..))
 import qualified Data.Text as T
 import           Data.Text (Text)
 
@@ -37,7 +32,7 @@ instance ToJSON Pagination where
       
 instance MetaObject Pagination where
   typeName _ = "pagination"
-  
+
 data User =
   User
     { userId      :: Int
@@ -63,14 +58,14 @@ instance FromJSON Group
 instance Arbitrary Group where
   arbitrary = Group <$> arbitrary <*> arbitrary
   
-instance ResourcefulEntity User where
+instance ResourceEntity User where
   resourceIdentifier      = T.pack . show . userId
   resourceType            = const "users"
   resourceLinks      user = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ userId user)))]
   resourceMetaData        = const Nothing
   resourceRelationships   = const $ Relationships HM.empty
 
-instance ResourcefulEntity Group where
+instance ResourceEntity Group where
   resourceIdentifier      = T.pack . show . groupId
   resourceType            = const "groups"
   resourceLinks     group = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ groupId group)))]
@@ -79,7 +74,7 @@ instance ResourcefulEntity Group where
 
 -- These resource types are used to associate one type with its relationships 
 -- The ToJSON and FromJSON should ignore the relationships
--- ResourcefulEntity toResource should also set the resources to empty list or nothing
+-- ResourceEntity toResource should also set the resources to empty list or nothing
 
 data UserResource =
   UserResource 
@@ -95,7 +90,7 @@ instance FromJSON UserResource where
   parseJSON o =
     UserResource <$> parseJSON o <*> pure [] <*> pure Nothing
     
-instance ResourcefulEntity UserResource where
+instance ResourceEntity UserResource where
   resourceIdentifier       = T.pack . show . userId . urUser
   resourceType             = const "users"
   resourceLinks         ur = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show . userId . urUser $ ur)))]
@@ -134,7 +129,7 @@ instance Arbitrary GroupResource where
     i <- choose (1,5)
     GroupResource <$> arbitrary <*> vector i
 
-instance ResourcefulEntity GroupResource where
+instance ResourceEntity GroupResource where
   resourceIdentifier       = T.pack . show . groupId . grGroup
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
@@ -158,25 +153,24 @@ mkGroupResourceDocument gr = Document [toResource gr] Nothing Nothing [members]
 mkk :: Document GroupResource -> [GroupResource]
 mkk dc = mems
   where
-    documentIncluded = _included dc
-    _rss = relationships <$> _data dc -- [Resource a]
+    documentIncluded = docIncluded dc
     
     getUsers :: [Identifier] -> [Value] -> [User]
-    getUsers is vs = fromResource <$> filter (\u -> (Data.JSONAPI.Resource.identifier u) `elem` is) users
+    getUsers is vs = fromResource <$> filter (\u -> (rsIdentifier u) `elem` is) users
       where
         users  = catMaybes $ resultToMaybe . fromJSON <$> vs :: [Resource User]
     
-    updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (relationships r)) documentIncluded }
+    updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (rsRelationships r)) documentIncluded }
       where
         groupR = fromResource r 
-    mems = updateResource <$> _data dc
+    mems = updateResource <$> docData dc
 
 
 getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]
 getRelationshipIdentifiers t (Relationships rs) =
   case HM.lookup t rs of
     Nothing -> []
-    Just r  -> identifiers r
+    Just r  -> rlIdentifiers r
 
 resultToMaybe :: Data.Aeson.Result a -> Maybe a
 resultToMaybe x = 
@@ -207,7 +201,7 @@ toResource a =
     (resourceLinks a)
     (resourceRelationships a)
 
-class (ToJSON a, FromJSON a) => ResourcefulEntity a where
+class (ToJSON a, FromJSON a) => ResourceEntity a where
   resourceIdentifier    :: a -> Text
   resourceType          :: a -> Text
   resourceLinks         :: a -> Maybe Links

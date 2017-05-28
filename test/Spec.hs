@@ -4,20 +4,12 @@
 module Main where
 
 import           Data.Aeson
-
-import           Data.JSONAPI.Document
-import           Data.JSONAPI.Identifier
-import           Data.JSONAPI.Link
-import           Data.JSONAPI.Meta
-import           Data.JSONAPI.Relationship
-import           Data.JSONAPI.Resource
-
+import           Data.JSONAPI
 import           Data.Proxy
 import           Data.Text (Text)
 import qualified Data.Text.Lazy          as TL
 import qualified Data.Text.Lazy.Encoding as TL
 import           Data.Typeable
-
 
 import           Test.Aeson.GenericSpecs
 import           Test.Hspec
@@ -41,8 +33,6 @@ jsonTextHaskellValuePairSpec jsonText haskellValue =
 main :: IO ()
 main = do
   hspec $ do
-    jsonTextHaskellValuePairSpec documentGroupResourceText documentGroupResourceExample    
-    {-
     jsonTextHaskellValuePairSpec documentText documentExample
     jsonTextHaskellValuePairSpec documentMultiResourceText documentMultiResourceExample
     jsonTextHaskellValuePairSpec documentGroupResourceText documentGroupResourceExample
@@ -57,12 +47,11 @@ main = do
     
     -- run serialization tests on arbitrary values
 
-    roundtripSpecs (Proxy :: Proxy (Document Group))
-    roundtripSpecs (Proxy :: Proxy (Document User))
+    -- roundtripSpecs (Proxy :: Proxy (Document Group))
+    -- roundtripSpecs (Proxy :: Proxy (Document User))
     roundtripSpecs (Proxy :: Proxy Identifier)
     roundtripSpecs (Proxy :: Proxy Links)
     roundtripSpecs (Proxy :: Proxy Meta)
     roundtripSpecs (Proxy :: Proxy Relationship)
     roundtripSpecs (Proxy :: Proxy (Resource Group))    
     roundtripSpecs (Proxy :: Proxy (Resource User))
-    -}

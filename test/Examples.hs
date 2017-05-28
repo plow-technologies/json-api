@@ -5,12 +5,7 @@ module Examples where
 
 import qualified Data.HashMap.Strict as HM
 import           Data.Monoid ((<>))
-import           Data.JSONAPI.Document
-import           Data.JSONAPI.Identifier
-import           Data.JSONAPI.Link
-import           Data.JSONAPI.Meta
-import           Data.JSONAPI.Relationship
-import           Data.JSONAPI.Resource
+import           Data.JSONAPI
 import           Data.Text (Text)
 
 import           Types

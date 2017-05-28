@@ -11,12 +11,7 @@
 
 module Models where
 
-import           Data.JSONAPI.Document
-import           Data.JSONAPI.Identifier
-import           Data.JSONAPI.Link
-import           Data.JSONAPI.Meta
-import           Data.JSONAPI.Relationship
-import           Data.JSONAPI.Resource
+import           Data.JSONAPI
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
@@ -89,21 +84,21 @@ instance (PersistEntity a, FromJSON a) => FromJSON (Entity a) where
     Entity <$> o .: "key"
            <*> o .: "value"
 
-instance ResourcefulEntity (Entity User) where
+instance ResourceEntity (Entity User) where
   resourceIdentifier      = T.pack . show . entityKey
   resourceType            = const "users"
   resourceLinks      user = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ entityKey user)))]
   resourceMetaData        = const Nothing
   resourceRelationships   = const $ Relationships HM.empty
 
-instance ResourcefulEntity (Entity Group) where
+instance ResourceEntity (Entity Group) where
   resourceIdentifier      = T.pack . show . entityKey
   resourceType            = const "groups"
   resourceLinks     group = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ entityKey group)))]
   resourceMetaData        = const Nothing
   resourceRelationships   = const $ Relationships HM.empty
   
-instance ResourcefulEntity GroupResource where
+instance ResourceEntity GroupResource where
   resourceIdentifier       = T.pack . show . entityKey . grGroup
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . entityKey . grGroup $ gr)))]

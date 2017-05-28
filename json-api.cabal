@@ -16,22 +16,21 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Data.JSONAPI
-                       Data.JSONAPI.Document
-                       Data.JSONAPI.Error
-                       Data.JSONAPI.Identifier
-                       Data.JSONAPI.Link
-                       Data.JSONAPI.Meta
-                       Data.JSONAPI.Relationship
-                       Data.JSONAPI.Resource
-  
-  other-modules:       Data.JSONAPI.Internal.Util
+  other-modules:       Data.JSONAPI.Internal.Document
+                       Data.JSONAPI.Internal.Error
+                       Data.JSONAPI.Internal.Identifier
+                       Data.JSONAPI.Internal.Link
+                       Data.JSONAPI.Internal.Meta
+                       Data.JSONAPI.Internal.Relationship
+                       Data.JSONAPI.Internal.Resource
+                       Data.JSONAPI.Internal.Util
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , text
                      , unordered-containers
                      , vector                     
   default-language:    Haskell2010
---  ghc-options:         -Wall -Werror
+  ghc-options:         -Wall -Werror
 
 test-suite test
   type:                exitcode-stdio-1.0
@@ -49,8 +48,7 @@ test-suite test
                      , QuickCheck
                      , text
                      , unordered-containers
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
---  -Wall -Werror  
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Werror  
   default-language:    Haskell2010
 
 test-suite persistent-test
@@ -62,9 +60,6 @@ test-suite persistent-test
                      , aeson
                      , json-api
                      , hspec
---                     , hspec-golden-aeson
---                     , quickcheck-arbitrary-adt
---                     , QuickCheck
                      , persistent
                      , persistent-sqlite
                      , persistent-template

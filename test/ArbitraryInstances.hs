@@ -4,12 +4,7 @@ module ArbitraryInstances where
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
-import           Data.JSONAPI.Document
-import           Data.JSONAPI.Identifier
-import           Data.JSONAPI.Link
-import           Data.JSONAPI.Meta
-import           Data.JSONAPI.Relationship
-import           Data.JSONAPI.Resource
+import           Data.JSONAPI
 import qualified Data.Text as T
 import           Data.Text (Text)
 import           Test.QuickCheck
@@ -57,10 +52,9 @@ instance Arbitrary Value where
 instance Arbitrary a => Arbitrary (Resource a) where
   arbitrary = Resource <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-{-
-instance (ResourcefulEntity a, Arbitrary a) => Arbitrary (Document a) where
+
+instance (ResourceEntity a, Arbitrary a) => Arbitrary (Document a) where
   arbitrary = do
     resourceSize <- choose (1,3)
     includeSize  <- choose (0,3)
     Document <$> vector resourceSize <*> arbitrary <*> arbitrary <*> vector includeSize
-    -}

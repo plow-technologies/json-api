@@ -10,7 +10,7 @@ Where specified, a meta member can be used to include non-standard meta-informat
 Any members MAY be specified within meta objects.
 -}
 
-module Data.JSONAPI.Meta (
+module Data.JSONAPI.Internal.Meta (
     Meta (..)
   , MetaObject (..)
   , mkMeta

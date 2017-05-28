@@ -7,7 +7,7 @@ Module representing a JSON-API link object.
 Specification: <http://jsonapi.org/format/#document-links>
 -}
 
-module Data.JSONAPI.Link (
+module Data.JSONAPI.Internal.Link (
     Link  (..)
   , LinkObject (..)
   , Links (..)
@@ -17,8 +17,8 @@ module Data.JSONAPI.Link (
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
+import           Data.JSONAPI.Internal.Meta (Meta)
 import           Data.JSONAPI.Internal.Util ((.=?))
-import           Data.JSONAPI.Meta (Meta)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
@@ -93,14 +93,14 @@ instance FromJSON Link where
 
 data LinkObject = 
   LinkObject
-    { href :: Text -- href
-    , meta :: Maybe Meta
+    { loHref :: Text -- href
+    , loMeta :: Maybe Meta
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON LinkObject where
-  toJSON (LinkObject _href _meta) =
+  toJSON (LinkObject loHref loMeta) =
     object
-      (["href" .= _href] ++ "meta" .=? _meta)
+      (["href" .= loHref] ++ "meta" .=? loMeta)
 
 instance FromJSON LinkObject where
   parseJSON = withObject "LinkObject" $ \o ->
