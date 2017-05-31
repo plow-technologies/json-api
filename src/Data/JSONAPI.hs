@@ -25,8 +25,9 @@ module Data.JSONAPI (
  , resourcesFromIncluded
  
  -- Values
- , emptyLinks
- , emptyRelationships
+ , includedEmpty
+ , linksEmpty
+ , relationshipsEmpty
  
  -- Type Classes
  , HasIdentifier  (..)

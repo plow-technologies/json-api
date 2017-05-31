@@ -4,13 +4,13 @@
 module Data.JSONAPI.Internal.Relationship (
    Relationship  (..)
  , Relationships (..)
- , emptyRelationships
+ , relationshipsEmpty
  ) where
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI.Internal.Identifier (Identifier (..))
-import           Data.JSONAPI.Internal.Link (Links(..), emptyLinks)
+import           Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
 import           Data.JSONAPI.Internal.Util ((.=@),(.:@),(.=#))
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
@@ -31,7 +31,7 @@ instance FromJSON Relationship where
   parseJSON = withObject "Relationship" $ \o -> do
     mLnks <- o .:? "links"
     let lnks = case mLnks of 
-          Nothing    -> emptyLinks
+          Nothing    -> linksEmpty
           Just jlnks -> jlnks
     Relationship <$> o .:@ "data"
                  <*> pure lnks
@@ -50,5 +50,5 @@ instance Monoid Relationships where
   mappend (Relationships a) (Relationships b) = Relationships $ HM.union a b
   mempty = Relationships $ HM.empty
 
-emptyRelationships :: Relationships
-emptyRelationships = Relationships HM.empty
+relationshipsEmpty :: Relationships
+relationshipsEmpty = Relationships HM.empty

@@ -9,9 +9,9 @@ module Data.JSONAPI.Internal.Resource (
 
 import Data.Aeson
 import Data.JSONAPI.Internal.Identifier (Identifier(..), HasIdentifier(..))
-import Data.JSONAPI.Internal.Link (Links(..), emptyLinks)
+import Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
 import Data.JSONAPI.Internal.Meta (Meta)
-import Data.JSONAPI.Internal.Relationship (Relationship(..), Relationships(..), emptyRelationships)
+import Data.JSONAPI.Internal.Relationship (Relationship(..), Relationships(..), relationshipsEmpty)
 import Data.JSONAPI.Internal.Util ((.=?), (.=#))
 import qualified Data.HashMap.Strict as HM
 import Data.Text (Text)
@@ -44,10 +44,10 @@ instance (FromJSON a) => FromJSON (Resource a) where
     mLnks <- o .:? "links"
     mRsps <- o .:? "relationships"
     let lnks = case mLnks of
-                 Nothing    -> emptyLinks
+                 Nothing    -> linksEmpty
                  Just jlnks -> jlnks
         rsps = case mRsps of
-                 Nothing    -> emptyRelationships
+                 Nothing    -> relationshipsEmpty
                  Just jrsps -> jrsps
     Resource <$> pure idntifier
              <*> o .:  "attributes"

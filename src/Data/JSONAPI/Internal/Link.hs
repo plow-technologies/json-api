@@ -11,7 +11,7 @@ module Data.JSONAPI.Internal.Link (
     Link  (..)
   , LinkObject (..)
   , Links (..)
-  , emptyLinks
+  , linksEmpty
   , mkLinks
   ) where
 
@@ -59,8 +59,8 @@ Specification: <http://jsonapi.org/format/#document-links>
 mkLinks :: [(Text,Link)] -> Links
 mkLinks = Links . HM.fromList
 
-emptyLinks :: Links 
-emptyLinks = Links HM.empty
+linksEmpty :: Links 
+linksEmpty = Links HM.empty
 
 newtype Links = Links (HM.HashMap Text Link) 
   deriving (Eq, Generic, Read, Show)
@@ -98,9 +98,9 @@ data LinkObject =
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON LinkObject where
-  toJSON (LinkObject loHref loMeta) =
+  toJSON (LinkObject _loHref _loMeta) =
     object
-      (["href" .= loHref] ++ "meta" .=? loMeta)
+      (["href" .= _loHref] ++ "meta" .=? _loMeta)
 
 instance FromJSON LinkObject where
   parseJSON = withObject "LinkObject" $ \o ->

@@ -143,7 +143,7 @@ instance ResourceEntity GroupResource where
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . entityKey . grGroup $ gr)))]
   resourceMetaData         = const Nothing
-  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) emptyLinks))]
+  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) linksEmpty))]
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
@@ -154,6 +154,7 @@ instance ResourceEntity GroupResource where
       (resourceLinks gr)
       (resourceRelationships gr)
 
+{-
 instance DocumentEntity GroupResource where
   toDocument grs = Document (toResource <$> grs) Nothing Nothing (Just members)
       where
@@ -187,3 +188,5 @@ resultToMaybe x =
   case x of
     Error _ -> Nothing
     Data.Aeson.Success a -> Just a
+    
+-}

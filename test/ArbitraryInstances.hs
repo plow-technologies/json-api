@@ -17,7 +17,7 @@ instance Arbitrary Meta where
 
 instance Arbitrary Included where
   arbitrary = do
-    i     <- choose (1,3)
+    i     <- choose (0,3)
     Included <$> (V.fromList <$> vector i)
 
 instance Arbitrary Identifier where

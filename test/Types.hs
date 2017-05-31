@@ -96,11 +96,11 @@ instance ResourceEntity UserResource where
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
-      friends = [("friends", (Relationship (mkIdentifier <$> urFriends ur) emptyLinks))]
+      friends = [("friends", (Relationship (mkIdentifier <$> urFriends ur) linksEmpty))]
       boss    = 
         case urBoss ur of
           Nothing  -> []
-          Just bss -> [("boss", (Relationship [mkIdentifier bss] emptyLinks))]
+          Just bss -> [("boss", (Relationship [mkIdentifier bss] linksEmpty))]
   toResource ur =
     Resource
       (Identifier (resourceIdentifier ur) (resourceType ur) (resourceMetaData ur))
@@ -131,7 +131,7 @@ instance ResourceEntity GroupResource where
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
   resourceMetaData         = const Nothing
-  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) emptyLinks))]
+  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) linksEmpty))]
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) Nothing
@@ -143,7 +143,7 @@ instance ResourceEntity GroupResource where
       (resourceRelationships gr)
 
 instance DocumentEntity GroupResource where
-  toDocument grs = Document (toResource <$> grs) Nothing Nothing (Just members)
+  toDocument grs = Document (toResource <$> grs) Nothing Nothing (members)
       where
         members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs) 
   

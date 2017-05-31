@@ -21,7 +21,7 @@ documentExample =
     [toResource userExample]
     Nothing
     Nothing 
-    Nothing
+    includedEmpty
 
 documentMultiResourceText :: Text
 documentMultiResourceText = 
@@ -34,7 +34,7 @@ documentMultiResourceExample =
     [toResource userExample, toResource user2Example]
     Nothing
     Nothing 
-    Nothing
+    includedEmpty
 
 userExample :: User
 userExample =
@@ -72,7 +72,7 @@ documentUserResourceExample =
     [toResource userResourceExample]
     Nothing 
     Nothing 
-    Nothing
+    includedEmpty
 
 userResourceExample :: UserResource
 userResourceExample = UserResource userExample [friendExample] (Just bossExample)
@@ -94,7 +94,7 @@ groupResourceResourceExample =
   Resource
     (Identifier "1" "groups" Nothing)
     (GroupResource (Group 1 "test-group") [userExample])
-    emptyLinks
+    linksEmpty
     (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" Nothing] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
 
 recodedGroupResourceResourceExample :: Resource GroupResource
@@ -102,7 +102,7 @@ recodedGroupResourceResourceExample =
   Resource
     (Identifier "1" "groups" Nothing)
     (GroupResource (Group 1 "test-group") [])
-    emptyLinks
+    linksEmpty
     (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" Nothing] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
   
 metaText :: Text
@@ -153,10 +153,8 @@ resourceExample =
   Resource
     (Identifier "2" "users" Nothing)
     (User 2 "Julio" "222 W. 22nd St")
-    emptyLinks
+    linksEmpty
     (Relationships $ HM.fromList [("friend", Relationship ([Identifier "3" "users" Nothing]) (Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
-    --(Just $ Links $ HM.fromList [("self","/api/users/2"),("friend","/api/users/3")])
-    --(Just $ Relationships $ HM.fromList [("friend", Relationship (Just $ Identifier "3" "users" Nothing) (Just $ Links $ HM.fromList [("self","/api/users/3")]))])
 
 resourceWithLinksExample :: Resource User
 resourceWithLinksExample =
@@ -164,5 +162,5 @@ resourceWithLinksExample =
     (Identifier "2" "users" Nothing)
     userExample
     (mkLinks [("self",(LinkHref "/api/users/2")),("friend",(LinkHref "/api/users/3"))])
-    emptyRelationships
+    relationshipsEmpty
 
