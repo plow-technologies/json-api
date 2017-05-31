@@ -21,12 +21,14 @@ module Data.JSONAPI (
  
  -- Helper Functions
  , identifiersFromResourceRelationships
+ , includedFromResources
  , parseIncludedResources
  , resourcesFromIncluded
  
  -- Values
  , includedEmpty
  , linksEmpty
+ , metaEmpty
  , relationshipsEmpty
  
  -- Type Classes

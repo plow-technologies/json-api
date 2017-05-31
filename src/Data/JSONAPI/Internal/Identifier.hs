@@ -26,8 +26,8 @@ data Identifier =
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON Identifier where
-  toJSON (Identifier idId idType idMeta) =
-    object (["id" .= idId, "type" .= idType] ++ ("meta" .=? idMeta))
+  toJSON (Identifier _idId _idType _idMeta) =
+    object (["id" .= _idId, "type" .= _idType] ++ ("meta" .=? _idMeta))
 
 instance FromJSON Identifier where
  parseJSON = withObject "Identifier" $ \o ->

@@ -8,6 +8,7 @@ module Data.JSONAPI.Internal.Document (
   , ErrorDocument (..)
   , Included (..)
   , includedEmpty
+  , includedFromResources
   , mkIncluded
   , parseIncludedResources
   , resourcesFromIncluded
@@ -16,10 +17,10 @@ module Data.JSONAPI.Internal.Document (
 import           Data.Aeson
 import qualified Data.JSONAPI.Internal.Error as E
 import           Data.JSONAPI.Internal.Identifier (Identifier)
-import           Data.JSONAPI.Internal.Link (Links)
+import           Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
 import           Data.JSONAPI.Internal.Meta (Meta)
 import           Data.JSONAPI.Internal.Resource
-import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@))
+import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@), (.=#))
 import           Data.Maybe (catMaybes)
 import qualified Data.Vector as V
 import           GHC.Generics (Generic)
@@ -56,19 +57,22 @@ parseIncludedResources (Included arr) = catMaybes . V.toList $ resultToMaybe . f
 resourcesFromIncluded :: (ResourceEntity a) => [Identifier] -> Included -> [a]
 resourcesFromIncluded identifiers included = fromResource <$> filter (\identifier -> (rsIdentifier identifier) `elem` identifiers) (parseIncludedResources included)
 
+includedFromResources :: (ResourceEntity a, ResourceEntity b) => [a] -> (a -> [b]) -> Included
+includedFromResources xs f = mkIncluded (concat $ fmap toResource <$> f <$> xs)
+
 data (ResourceEntity a) => Document a =
   Document 
     { docData      :: [Resource a] -- should never be empty
-    , docLinks     :: Maybe Links
+    , docLinks     :: Links
     , docMeta      :: Maybe Meta
     , docIncluded  :: Included -- [Value] -- if exists should be (Array [Object, Object,...])
     } deriving (Eq, Read, Show)
 
 instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
-  toJSON (Document _docData _docLinks _docMeta _docIncluded) =
+  toJSON (Document _docData (Links _docLinks) _docMeta _docIncluded) =
     object 
       (     "data"     .=@  _docData
-        ++  "links"    .=?  _docLinks
+        ++  "links"    .=#  _docLinks
         ++  "meta"     .=?  _docMeta
         ++  (included _docIncluded)
       )
@@ -80,13 +84,17 @@ instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
            
 instance (ResourceEntity a, FromJSON a) => FromJSON (Document a) where
   parseJSON = withObject "Document" $ \o -> do
+    mLinks <- o .:? "links"
     let included = case HM.lookup "included" o of
           Just (Array arr) -> Included arr
-          _                   -> includedEmpty
-
+          _                -> includedEmpty
+        links = case mLinks of 
+              Nothing    -> linksEmpty
+              Just jlnks -> jlnks
+          
     Document 
       <$> o .:@ "data"
-      <*> o .:? "links"
+      <*> pure links
       <*> o .:? "meta"
       <*> pure included
              

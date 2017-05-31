@@ -13,6 +13,7 @@ Any members MAY be specified within meta objects.
 module Data.JSONAPI.Internal.Meta (
     Meta (..)
   , MetaObject (..)
+  , metaEmpty
   , mkMeta
   ) where
 
@@ -40,3 +41,6 @@ class (ToJSON a) => MetaObject a where
 
 mkMeta :: (MetaObject a) => a -> Meta
 mkMeta obj = Meta $ HM.singleton (typeName obj) (toJSON obj)
+
+metaEmpty :: Meta
+metaEmpty = Meta HM.empty

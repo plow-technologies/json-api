@@ -143,9 +143,10 @@ instance ResourceEntity GroupResource where
       (resourceRelationships gr)
 
 instance DocumentEntity GroupResource where
-  toDocument grs = Document (toResource <$> grs) Nothing Nothing (members)
+  toDocument grs = Document (toResource <$> grs) linksEmpty Nothing (members)
       where
-        members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs) 
+        -- members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs)
+        members = includedFromResources grs grUsers
   
   fromDocument doc = updateResource <$> docData doc
     where
