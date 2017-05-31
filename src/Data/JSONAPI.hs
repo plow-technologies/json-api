@@ -19,6 +19,11 @@ module Data.JSONAPI (
  , mkIncluded
  , mkMeta
  
+ -- Helper Functions
+ , identifiersFromResourceRelationships
+ , parseIncludedResources
+ , resourcesFromIncluded
+ 
  -- Values
  , emptyLinks
  , emptyRelationships

@@ -4,14 +4,16 @@
 module Data.JSONAPI.Internal.Resource (
    Resource (..)
  , ResourceEntity (..)
+ , identifiersFromResourceRelationships
  ) where
 
 import Data.Aeson
 import Data.JSONAPI.Internal.Identifier (Identifier(..), HasIdentifier(..))
 import Data.JSONAPI.Internal.Link (Links(..), emptyLinks)
 import Data.JSONAPI.Internal.Meta (Meta)
-import Data.JSONAPI.Internal.Relationship (Relationships(..), emptyRelationships)
+import Data.JSONAPI.Internal.Relationship (Relationship(..), Relationships(..), emptyRelationships)
 import Data.JSONAPI.Internal.Util ((.=?), (.=#))
+import qualified Data.HashMap.Strict as HM
 import Data.Text (Text)
 
 data Resource a =
@@ -72,3 +74,13 @@ class (ToJSON a, FromJSON a) => ResourceEntity a where
       a
       (resourceLinks a)
       (resourceRelationships a)
+
+
+-- | Useful function for extracting document relations.
+identifiersFromResourceRelationships :: Text -> Resource a -> [Identifier]
+identifiersFromResourceRelationships key rs =
+  case HM.lookup key (unwrapRelationships $ rsRelationships rs) of
+    Nothing -> []
+    Just rls -> rlIdentifiers rls
+  where
+    unwrapRelationships (Relationships rls) = rls

@@ -6,17 +6,12 @@ module Types where
 import           ArbitraryInstances ()
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
-import           Data.Maybe (catMaybes)
 import           Data.Monoid ((<>))
 import           Data.JSONAPI hiding (Error(..))
 import qualified Data.Text as T
 import           Data.Text (Text)
-
 import           GHC.Generics (Generic)
-
 import           Test.QuickCheck
-
-import qualified Data.Vector as V
 
 -- A collection of sample types for testing
 data Pagination = 
@@ -153,34 +148,21 @@ instance DocumentEntity GroupResource where
         members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs) 
   
   fromDocument doc = updateResource <$> docData doc
-    where      
-      getUsers :: [Identifier] -> Maybe Included -> [User]
-      getUsers is mvs = fromResource <$> filter (\u -> (rsIdentifier u) `elem` is) users
-        where
-          parseUsers :: Included -> [Resource User] 
-          parseUsers (Included arr) = catMaybes $ V.toList $ resultToMaybe . fromJSON <$> arr
-          
-          users = 
-            case mvs of
-              Nothing -> []
-              Just vs -> parseUsers vs
-
-      updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (rsRelationships r)) (docIncluded doc) }
+    where
+      updateResource r = groupR { grUsers = resourcesFromIncluded (identifiersFromResourceRelationships "members" r) (docIncluded doc) }
         where
           groupR = fromResource r 
 
+
+-- identifiersFromRelationships :: Text -> Relationships -> [Identifier]
+
+{-
 getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]
 getRelationshipIdentifiers t (Relationships rs) =
   case HM.lookup t rs of
     Nothing -> []
     Just r  -> rlIdentifiers r
-
-resultToMaybe :: Data.Aeson.Result a -> Maybe a
-resultToMaybe x = 
-  case x of
-    Error _ -> Nothing
-    Data.Aeson.Success a -> Just a
-
+-}
 -- document has included
 -- relationship has 
 {-
