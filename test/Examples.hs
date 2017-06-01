@@ -10,17 +10,6 @@ import           Data.Text (Text)
 
 import           Types
 
-{-
-document 
-document with links
-document with meta (pagination)
-document with links and meta
-document with relationships
-document with similar typed relationships but different keys
-document with multiple resources
-document with heterogeneous relationships
--}
-
 -- document examples
 
 documentText :: Text

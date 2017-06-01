@@ -27,7 +27,6 @@ import qualified Data.Vector as V
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
   name Text
-  address Text
   deriving Eq Read Show
 
 Group
@@ -35,27 +34,25 @@ Group
   deriving Eq Read Show
   
 GroupUserJoin
-  user  UserId
-  group GroupId
+  userId  UserId
+  groupId GroupId
   deriving Eq Read Show
 
-Comment
-  comment Text
-  userId  UserId
+BlogPost
+  contents Text
+  userId   UserId
   deriving Eq Read Show
 |]
 
 instance ToJSON User where
-  toJSON (User uname uaddress) =
+  toJSON (User uname) =
     object 
       [ "name"    .= uname
-      , "address" .= uaddress
       ]
       
 instance FromJSON User where
   parseJSON = withObject "User" $ \o ->
     User <$> o .: "name"
-         <*> o .: "address"
 
 instance ToJSON Group where
   toJSON (Group gname) = 
@@ -66,23 +63,25 @@ instance FromJSON Group where
   parseJSON = withObject "Group" $ \o ->
     Group <$> o .: "name"
 
-instance ToJSON Comment where
-  toJSON (Comment _comment _userId) =
+instance ToJSON BlogPost where
+  toJSON (BlogPost _contents _userId) =
     object
-      [ "comment" .= _comment
+      [ "contents" .= _contents
       , "userId"  .= _userId
       ]
 
-instance FromJSON Comment where
-  parseJSON = withObject "Comment" $ \o ->
-    Comment <$> o .: "comment"
-            <*> o .: "userId"
+instance FromJSON BlogPost where
+  parseJSON = withObject "BlogPost" $ \o ->
+    BlogPost <$> o .: "contents"
+             <*> o .: "userId"
+
+-- Resource types are to help martial Relationships into and out of Documents
 
 data UserResource = 
   UserResource {
     urUser     :: (Entity User)
   , urGroups   :: [Entity Group]
-  , urComments :: [Entity Comment]
+  , urBlogPosts :: [Entity BlogPost]
   } deriving (Eq, Read, Show)
 
 instance ToJSON UserResource where
@@ -131,13 +130,32 @@ instance ResourceEntity (Entity Group) where
   resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
   
-instance ResourceEntity (Entity Comment) where
+instance ResourceEntity (Entity BlogPost) where
   resourceIdentifier      = T.pack . show . entityKey
-  resourceType            = const "comments"
-  resourceLinks   comment = mkLinks [("self", LinkHref ("/api/comments/" <> (T.pack . show $ entityKey comment)))]
+  resourceType            = const "blogposts"
+  resourceLinks  blogpost = mkLinks [("self", LinkHref ("/api/blog/posts/" <> (T.pack . show $ entityKey blogpost)))]
   resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
-  
+
+instance ResourceEntity UserResource where
+  resourceIdentifier       = T.pack . show . entityKey . urUser
+  resourceType             = const "users"
+  resourceLinks         ur = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show . entityKey . urUser $ ur)))]
+  resourceMetaData         = const metaEmpty
+  resourceRelationships ur = Relationships . HM.fromList $ (catMaybes $ groups ++ blogposts)
+    where
+      mkIdentifier user =
+        Identifier (resourceIdentifier user) (resourceType user) metaEmpty
+      groups    = [mkKeyRelationshipPair "groups"    (mkIdentifier <$> urGroups ur)    linksEmpty]
+      blogposts = [mkKeyRelationshipPair "blogposts" (mkIdentifier <$> urBlogPosts ur) linksEmpty]
+      
+  toResource ur =
+    Resource
+      (Identifier (resourceIdentifier ur) (resourceType ur) (resourceMetaData ur))
+      (ur { urGroups = [], urBlogPosts = [] } )
+      (resourceLinks ur)
+      (resourceRelationships ur)
+        
 instance ResourceEntity GroupResource where
   resourceIdentifier       = T.pack . show . entityKey . grGroup
   resourceType             = const "groups"
@@ -153,40 +171,18 @@ instance ResourceEntity GroupResource where
       (gr { grUsers = [] } )
       (resourceLinks gr)
       (resourceRelationships gr)
-
-{-
-instance DocumentEntity GroupResource where
-  toDocument grs = Document (toResource <$> grs) Nothing Nothing (Just members)
+      
+instance DocumentEntity UserResource where
+  toDocument urs = Document (toResource <$> urs) linksEmpty metaEmpty (groups <> blogposts)
       where
-        members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs) 
+        groups    = includedFromResources urs urGroups
+        blogposts = includedFromResources urs urBlogPosts
   
   fromDocument doc = updateResource <$> docData doc
-    where      
-      getUsers :: [Identifier] -> Maybe Included -> [(Entity User)]
-      getUsers is mvs = fromResource <$> filter (\u -> (rsIdentifier u) `elem` is) users
+    where
+      updateResource r = userR { urGroups   = resourcesFromIncluded (identifiersFromResourceRelationships  "groups" r) (docIncluded doc)
+                               , urBlogPosts = resourcesFromIncluded (identifiersFromResourceRelationships "blogposts" r) (docIncluded doc)
+                               }
         where
-          parseUsers :: Included -> [Resource (Entity User)] 
-          parseUsers (Included arr) = catMaybes $ V.toList $ resultToMaybe . fromJSON <$> arr
-          
-          users = 
-            case mvs of
-              Nothing -> []
-              Just vs -> parseUsers vs
+          userR = fromResource r
 
-      updateResource r = groupR { grUsers = getUsers (getRelationshipIdentifiers "members" (rsRelationships r)) (docIncluded doc) }
-        where
-          groupR = fromResource r 
-
-getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]
-getRelationshipIdentifiers t (Relationships rs) =
-  case HM.lookup t rs of
-    Nothing -> []
-    Just r  -> rlIdentifiers r
-
-resultToMaybe :: Data.Aeson.Result a -> Maybe a
-resultToMaybe x = 
-  case x of
-    Error _ -> Nothing
-    Data.Aeson.Success a -> Just a
-    
--}
