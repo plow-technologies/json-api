@@ -161,7 +161,7 @@ instance ResourceEntity GroupResource where
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . entityKey . grGroup $ gr)))]
   resourceMetaData         = const metaEmpty
-  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) linksEmpty))]
+  resourceRelationships gr = Relationships . HM.fromList $ catMaybes [mkKeyRelationshipPair "members" (mkIdentifier <$> grUsers gr) linksEmpty]
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) metaEmpty

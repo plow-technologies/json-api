@@ -15,6 +15,7 @@ import Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
 import Data.JSONAPI.Internal.Relationship (Relationship(..), Relationships(..), relationshipsEmpty)
 import Data.JSONAPI.Internal.Util ((.=#))
 import qualified Data.HashMap.Strict as HM
+import qualified Data.HashSet as HS
 import Data.Text (Text)
 
 data Resource a =
@@ -96,6 +97,6 @@ identifiersFromResourceRelationships :: Text -> Resource a -> [Identifier]
 identifiersFromResourceRelationships key rs =
   case HM.lookup key (unwrapRelationships $ rsRelationships rs) of
     Nothing -> []
-    Just rls -> rlIdentifiers rls
+    Just rls -> HS.toList $ rlIdentifiers rls
   where
     unwrapRelationships (Relationships rls) = rls
