@@ -17,7 +17,7 @@ import qualified Data.JSONAPI.Internal.Error as E
 import           Data.JSONAPI.Internal.Identifier (Identifier)
 import           Data.JSONAPI.Internal.Included
 import           Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
-import           Data.JSONAPI.Internal.Meta (Meta)
+import           Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
 import           Data.JSONAPI.Internal.Resource
 import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@), (.=#))
 import           Data.Maybe (catMaybes)
@@ -32,26 +32,31 @@ data (ResourceEntity a) => Document a =
   Document 
     { docData      :: [Resource a] -- should never be empty
     , docLinks     :: Links
-    , docMeta      :: Maybe Meta
+    , docMeta      :: Meta
     , docIncluded  :: Included -- [Value] -- if exists should be (Array [Object, Object,...])
     } deriving (Eq, Read, Show)
 
 instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
-  toJSON (Document _docData (Links _docLinks) _docMeta _docIncluded) =
+  toJSON (Document _docData (Links _docLinks) _docMeta@(Meta o) _docIncluded@(Included arr)) =
     object 
       (     "data"     .=@  _docData
         ++  "links"    .=#  _docLinks
-        ++  "meta"     .=?  _docMeta
-        ++  (included _docIncluded)
+        ++  meta
+        ++  included
       )
     where
-      included (Included arr) =
+      included =
         case V.length arr of
           0 -> []
           _ -> ["included" .= _docIncluded]
+      meta =
+        case HM.size o of
+          0 -> []
+          _ -> ["meta" .= _docMeta]
            
 instance (ResourceEntity a, FromJSON a) => FromJSON (Document a) where
   parseJSON = withObject "Document" $ \o -> do
+    mMeta  <- o .:? "meta"
     mLinks <- o .:? "links"
     let included = case HM.lookup "included" o of
           Just (Array arr) -> Included arr
@@ -59,11 +64,13 @@ instance (ResourceEntity a, FromJSON a) => FromJSON (Document a) where
         links = case mLinks of 
               Nothing    -> linksEmpty
               Just jlnks -> jlnks
-          
+        meta = case mMeta of
+              Nothing  -> metaEmpty
+              Just mta -> mta  
     Document 
       <$> o .:@ "data"
       <*> pure links
-      <*> o .:? "meta"
+      <*> pure meta
       <*> pure included
              
 data ErrorDocument =

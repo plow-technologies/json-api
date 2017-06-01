@@ -133,7 +133,7 @@ instance ResourceEntity UserResource where
 
 
 instance DocumentEntity UserResource where
-  toDocument urs = Document (toResource <$> urs) linksEmpty Nothing (friends <> boss <> blogposts)
+  toDocument urs = Document (toResource <$> urs) linksEmpty metaEmpty (friends <> boss <> blogposts)
       where
         friends   = includedFromResources urs urFriends
         boss      = includedFromResources2 urs urBoss
@@ -183,7 +183,7 @@ instance ResourceEntity GroupResource where
       (resourceRelationships gr)
 
 instance DocumentEntity GroupResource where
-  toDocument grs = Document (toResource <$> grs) linksEmpty Nothing (members)
+  toDocument grs = Document (toResource <$> grs) linksEmpty metaEmpty (members)
       where
         members = includedFromResources grs grUsers
   

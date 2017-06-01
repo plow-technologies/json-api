@@ -31,7 +31,7 @@ documentExample =
   Document
     [toResource userExample]
     linksEmpty
-    Nothing 
+    metaEmpty
     includedEmpty
 
 documentMultiResourceText :: Text
@@ -44,7 +44,7 @@ documentMultiResourceExample =
   Document
     [toResource userExample, toResource user2Example]
     linksEmpty
-    Nothing 
+    metaEmpty
     includedEmpty
 
 userExample :: User
@@ -82,7 +82,7 @@ documentUserResourceExample =
   Document
     [toResource userResourceExample]
     linksEmpty
-    Nothing 
+    metaEmpty
     includedEmpty
 
 userResourceExample :: UserResource
