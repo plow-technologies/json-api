@@ -17,8 +17,7 @@ module Data.JSONAPI.Internal.Link (
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
-import           Data.JSONAPI.Internal.Meta (Meta)
-import           Data.JSONAPI.Internal.Util ((.=?))
+import           Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
@@ -94,15 +93,25 @@ instance FromJSON Link where
 data LinkObject = 
   LinkObject
     { loHref :: Text -- href
-    , loMeta :: Maybe Meta
+    , loMeta :: Meta
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON LinkObject where
-  toJSON (LinkObject _loHref _loMeta) =
+  toJSON (LinkObject _loHref _loMeta@(Meta o)) =
     object
-      (["href" .= _loHref] ++ "meta" .=? _loMeta)
+      (["href" .= _loHref] ++ meta)
+      where
+        meta = 
+          case HM.size o of
+            0 -> []
+            _ -> ["meta" .= _loMeta]
 
 instance FromJSON LinkObject where
-  parseJSON = withObject "LinkObject" $ \o ->
+  parseJSON = withObject "LinkObject" $ \o -> do
+    mMeta <- o .:? "meta" 
+    let meta = 
+          case mMeta of
+            Nothing  -> metaEmpty
+            Just mta -> mta  
     LinkObject <$> o .:  "href"
-               <*> o .:? "meta"
+               <*> pure meta

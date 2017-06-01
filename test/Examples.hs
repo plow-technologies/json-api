@@ -86,7 +86,7 @@ documentUserResourceExample =
     includedEmpty
 
 userResourceExample :: UserResource
-userResourceExample = UserResource userExample [friendExample] (Just bossExample)
+userResourceExample = UserResource userExample [friendExample] (Just bossExample) []
 
 groupExample :: Group
 groupExample = Group 1 "test-group"
@@ -103,18 +103,18 @@ groupResourceResourceText =
 groupResourceResourceExample :: Resource GroupResource
 groupResourceResourceExample = 
   Resource
-    (Identifier "1" "groups" Nothing)
+    (Identifier "1" "groups" metaEmpty)
     (GroupResource (Group 1 "test-group") [userExample])
     linksEmpty
-    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" Nothing] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
 
 recodedGroupResourceResourceExample :: Resource GroupResource
 recodedGroupResourceResourceExample = 
   Resource
-    (Identifier "1" "groups" Nothing)
+    (Identifier "1" "groups" metaEmpty)
     (GroupResource (Group 1 "test-group") [])
     linksEmpty
-    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" Nothing] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
   
 metaText :: Text
 metaText = "{\"pagination\":{\"currentPage\":1,\"totalPages\":15}}"
@@ -126,13 +126,13 @@ identifierText :: Text
 identifierText = "{\"id\":\"1\",\"type\":\"users\"}"
 
 identifierExample :: Identifier
-identifierExample = Identifier "1" "users" Nothing
+identifierExample = Identifier "1" "users" metaEmpty
 
 identifierWithMetaText :: Text
 identifierWithMetaText = "{\"id\":\"1\",\"meta\":{\"pagination\":{\"currentPage\":1,\"totalPages\":15}},\"type\":\"users\"}"
 
 identifierWithMetaExample :: Identifier
-identifierWithMetaExample = Identifier "1" "users" (Just metaPaginationExample)
+identifierWithMetaExample = Identifier "1" "users" metaPaginationExample
 
 linksText :: Text
 linksText = "{\"self\":\"/api/users/1\",\"next\":\"/api/users/2\"}"
@@ -145,9 +145,6 @@ relationshipText = "{\"data\":{\"id\":\"1\",\"type\":\"users\"},\"links\":{\"nex
 
 relationshipExample :: Relationship
 relationshipExample = Relationship [identifierExample] linksExample
-
---resourceText :: Text
---resourceText = "{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"links\":{\"self\":\"/api/users/2\",\"friend\":\"/api/users/3\"},\"relationships\":[{}]}"
 
 resourceText :: Text
 resourceText = 
@@ -162,15 +159,15 @@ resourceWithLinksText = "{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"user
 resourceExample :: Resource User
 resourceExample =
   Resource
-    (Identifier "2" "users" Nothing)
+    (Identifier "2" "users" metaEmpty)
     (User 2 "Julio" "222 W. 22nd St")
     linksEmpty
-    (Relationships $ HM.fromList [("friend", Relationship ([Identifier "3" "users" Nothing]) (Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
+    (Relationships $ HM.fromList [("friend", Relationship ([Identifier "3" "users" metaEmpty]) (Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
 
 resourceWithLinksExample :: Resource User
 resourceWithLinksExample =
   Resource
-    (Identifier "2" "users" Nothing)
+    (Identifier "2" "users" metaEmpty)
     userExample
     (mkLinks [("self",(LinkHref "/api/users/2")),("friend",(LinkHref "/api/users/3"))])
     relationshipsEmpty

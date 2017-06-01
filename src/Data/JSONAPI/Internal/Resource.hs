@@ -10,9 +10,9 @@ module Data.JSONAPI.Internal.Resource (
 import Data.Aeson
 import Data.JSONAPI.Internal.Identifier (Identifier(..), HasIdentifier(..))
 import Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
-import Data.JSONAPI.Internal.Meta (Meta)
+import Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
 import Data.JSONAPI.Internal.Relationship (Relationship(..), Relationships(..), relationshipsEmpty)
-import Data.JSONAPI.Internal.Util ((.=?), (.=#))
+import Data.JSONAPI.Internal.Util ((.=#))
 import qualified Data.HashMap.Strict as HM
 import Data.Text (Text)
 
@@ -25,30 +25,41 @@ data Resource a =
     } deriving (Eq, Read, Show)
 
 instance (ToJSON a) => ToJSON (Resource a) where
-  toJSON (Resource (Identifier resId resType metaObj) resObj (Links linksObj) (Relationships rels)) = 
+  toJSON (Resource (Identifier resId resType metaObj@(Meta o)) resObj (Links linksObj) (Relationships rels)) = 
     object (
       [ "id"             .= resId
       , "type"           .= resType
       , "attributes"     .= resObj
       ] 
-      ++ "meta"          .=? metaObj 
+      ++ meta
       ++ "links"         .=# linksObj 
       ++ "relationships" .=# rels
     )
+    where
+      meta = 
+        case HM.size o of
+          0 -> []
+          _ -> ["meta" .= metaObj]
       
 instance (FromJSON a) => FromJSON (Resource a) where
   parseJSON = withObject "Resource" $ \o -> do
+    mMeta <- o .:? "meta"
+    let meta = case mMeta of
+          Nothing    -> metaEmpty
+          Just mta   -> mta
     idntifier <- Identifier <$> o .:  "id"
                             <*> o .:  "type"
-                            <*> o .:? "meta"
+                            <*> pure meta
     mLnks <- o .:? "links"
     mRsps <- o .:? "relationships"
+
     let lnks = case mLnks of
                  Nothing    -> linksEmpty
                  Just jlnks -> jlnks
         rsps = case mRsps of
                  Nothing    -> relationshipsEmpty
                  Just jrsps -> jrsps
+
     Resource <$> pure idntifier
              <*> o .:  "attributes"
              <*> pure lnks
@@ -61,7 +72,7 @@ class (ToJSON a, FromJSON a) => ResourceEntity a where
   resourceIdentifier    :: a -> Text
   resourceType          :: a -> Text
   resourceLinks         :: a -> Links
-  resourceMetaData      :: a -> Maybe Meta
+  resourceMetaData      :: a -> Meta
   resourceRelationships :: a -> Relationships
 
   fromResource :: Resource a -> a

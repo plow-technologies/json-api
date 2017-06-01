@@ -6,6 +6,7 @@ module Types where
 import           ArbitraryInstances ()
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
+import           Data.Maybe (catMaybes, listToMaybe)
 import           Data.Monoid ((<>))
 import           Data.JSONAPI hiding (Error(..))
 import qualified Data.Text as T
@@ -42,6 +43,18 @@ instance FromJSON User
 
 instance Arbitrary User where
   arbitrary = User <$> arbitrary <*> arbitrary <*> arbitrary
+
+data BlogPost =
+  BlogPost 
+    { blogPostId   :: Int
+    , blogPostText :: Text
+    } deriving (Eq,Generic,Read,Show)
+
+instance ToJSON BlogPost
+instance FromJSON BlogPost
+
+instance Arbitrary BlogPost where
+  arbitrary = BlogPost <$> arbitrary <*> arbitrary
   
 data Group =
   Group 
@@ -59,14 +72,21 @@ instance ResourceEntity User where
   resourceIdentifier      = T.pack . show . userId
   resourceType            = const "users"
   resourceLinks      user = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ userId user)))]
-  resourceMetaData        = const Nothing
+  resourceMetaData        = const metaEmpty
+  resourceRelationships   = const $ Relationships HM.empty
+
+instance ResourceEntity BlogPost where
+  resourceIdentifier      = T.pack . show . blogPostId
+  resourceType            = const "blogposts"
+  resourceLinks      user = mkLinks [("self", LinkHref ("/api/blog/post/" <> (T.pack . show $ blogPostId user)))]
+  resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
 
 instance ResourceEntity Group where
   resourceIdentifier      = T.pack . show . groupId
   resourceType            = const "groups"
   resourceLinks     group = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ groupId group)))]
-  resourceMetaData        = const Nothing
+  resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
 
 -- These resource types are used to associate one type with its relationships 
@@ -75,38 +95,58 @@ instance ResourceEntity Group where
 
 data UserResource =
   UserResource 
-    { urUser    :: User
-    , urFriends :: [User]
-    , urBoss    :: Maybe User
+    { urUser      :: User
+    , urFriends   :: [User]
+    , urBoss      :: Maybe User
+    , urBlogPosts :: [BlogPost]
     } deriving (Eq, Generic, Read, Show)
 
 instance ToJSON UserResource where
-  toJSON (UserResource u _friends _boss) = toJSON u
+  toJSON (UserResource u _friends _boss _blogposts) = toJSON u
 
 instance FromJSON UserResource where
   parseJSON o =
-    UserResource <$> parseJSON o <*> pure [] <*> pure Nothing
+    UserResource <$> parseJSON o <*> pure [] <*> pure Nothing <*> pure []
     
 instance ResourceEntity UserResource where
   resourceIdentifier       = T.pack . show . userId . urUser
   resourceType             = const "users"
   resourceLinks         ur = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show . userId . urUser $ ur)))]
-  resourceMetaData         = const Nothing
-  resourceRelationships ur = Relationships . HM.fromList $ friends ++ boss
+  resourceMetaData         = const metaEmpty
+  resourceRelationships ur = Relationships . HM.fromList $ (catMaybes $ friends ++ boss ++ blogposts)
     where
       mkIdentifier user =
-        Identifier (resourceIdentifier user) (resourceType user) Nothing
-      friends = [("friends", (Relationship (mkIdentifier <$> urFriends ur) linksEmpty))]
+        Identifier (resourceIdentifier user) (resourceType user) metaEmpty
+      friends = [mkKeyRelationshipPair "friends" (mkIdentifier <$> urFriends ur) linksEmpty]
       boss    = 
         case urBoss ur of
           Nothing  -> []
-          Just bss -> [("boss", (Relationship [mkIdentifier bss] linksEmpty))]
+          Just bss -> [mkKeyRelationshipPair "boss" [mkIdentifier bss] linksEmpty]
+      blogposts = [mkKeyRelationshipPair "blogposts" (mkIdentifier <$> urBlogPosts ur) linksEmpty]
+      
   toResource ur =
     Resource
       (Identifier (resourceIdentifier ur) (resourceType ur) (resourceMetaData ur))
-      (ur { urFriends = [], urBoss = Nothing } )
+      (ur { urFriends = [], urBoss = Nothing, urBlogPosts = [] } )
       (resourceLinks ur)
       (resourceRelationships ur)
+
+
+instance DocumentEntity UserResource where
+  toDocument urs = Document (toResource <$> urs) linksEmpty Nothing (friends <> boss <> blogposts)
+      where
+        friends   = includedFromResources urs urFriends
+        boss      = includedFromResources2 urs urBoss
+        blogposts = includedFromResources urs urBlogPosts
+  
+  fromDocument doc = updateResource <$> docData doc
+    where
+      updateResource r = userR { urFriends   = resourcesFromIncluded (identifiersFromResourceRelationships "friends" r) (docIncluded doc)
+                               , urBoss      = listToMaybe $ resourcesFromIncluded (identifiersFromResourceRelationships "boss" r) (docIncluded doc)
+                               , urBlogPosts = resourcesFromIncluded (identifiersFromResourceRelationships "blogposts" r) (docIncluded doc)
+                               }
+        where
+          userR = fromResource r
 
 data GroupResource =
   GroupResource 
@@ -130,11 +170,11 @@ instance ResourceEntity GroupResource where
   resourceIdentifier       = T.pack . show . groupId . grGroup
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . groupId . grGroup $ gr)))]
-  resourceMetaData         = const Nothing
-  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) linksEmpty))]
+  resourceMetaData         = const metaEmpty
+  resourceRelationships gr = Relationships . HM.fromList . catMaybes $ [mkKeyRelationshipPair "members" (mkIdentifier <$> grUsers gr) linksEmpty]
     where
       mkIdentifier user =
-        Identifier (resourceIdentifier user) (resourceType user) Nothing
+        Identifier (resourceIdentifier user) (resourceType user) metaEmpty
   toResource gr =
     Resource
       (Identifier (resourceIdentifier gr) (resourceType gr) (resourceMetaData gr))
@@ -145,64 +185,10 @@ instance ResourceEntity GroupResource where
 instance DocumentEntity GroupResource where
   toDocument grs = Document (toResource <$> grs) linksEmpty Nothing (members)
       where
-        -- members = mkIncluded (concat $ fmap toResource <$> grUsers <$> grs)
         members = includedFromResources grs grUsers
   
   fromDocument doc = updateResource <$> docData doc
     where
       updateResource r = groupR { grUsers = resourcesFromIncluded (identifiersFromResourceRelationships "members" r) (docIncluded doc) }
         where
-          groupR = fromResource r 
-
-
--- identifiersFromRelationships :: Text -> Relationships -> [Identifier]
-
-{-
-getRelationshipIdentifiers :: Text -> Relationships -> [Identifier]
-getRelationshipIdentifiers t (Relationships rs) =
-  case HM.lookup t rs of
-    Nothing -> []
-    Just r  -> rlIdentifiers r
--}
--- document has included
--- relationship has 
-{-
-documentUserResourceExample :: Document UserResource
-documentUserResourceExample = 
-  Document
-    [toResource userResourceExample]
-    Nothing 
-    Nothing 
-    []
-
-
-fromResource :: Resource a -> a
-fromResource = resource
-
-toResource :: a -> Resource a
-toResource a =
-  Resource
-    (Identifier (resourceIdentifier a) (resourceType a) (resourceMetaData a))
-    a
-    (resourceLinks a)
-    (resourceRelationships a)
-
-class (ToJSON a, FromJSON a) => ResourceEntity a where
-  resourceIdentifier    :: a -> Text
-  resourceType          :: a -> Text
-  resourceLinks         :: a -> Maybe Links
-  resourceMetaData      :: a -> Maybe Meta
-  resourceRelationships :: a -> Maybe Relationships
-
-  fromResource :: Resource a -> a
-  fromResource = resource
-
-  toResource :: a -> Resource a
-  toResource a =
-    Resource
-      (Identifier (resourceIdentifier a) (resourceType a) (resourceMetaData a))
-      a
-      (resourceLinks a)
-      (resourceRelationships a)
-
--}
+          groupR = fromResource r

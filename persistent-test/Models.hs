@@ -121,32 +121,32 @@ instance ResourceEntity (Entity User) where
   resourceIdentifier      = T.pack . show . entityKey
   resourceType            = const "users"
   resourceLinks      user = mkLinks [("self", LinkHref ("/api/users/" <> (T.pack . show $ entityKey user)))]
-  resourceMetaData        = const Nothing
+  resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
 
 instance ResourceEntity (Entity Group) where
   resourceIdentifier      = T.pack . show . entityKey
   resourceType            = const "groups"
   resourceLinks     group = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show $ entityKey group)))]
-  resourceMetaData        = const Nothing
+  resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
   
 instance ResourceEntity (Entity Comment) where
   resourceIdentifier      = T.pack . show . entityKey
   resourceType            = const "comments"
   resourceLinks   comment = mkLinks [("self", LinkHref ("/api/comments/" <> (T.pack . show $ entityKey comment)))]
-  resourceMetaData        = const Nothing
+  resourceMetaData        = const metaEmpty
   resourceRelationships   = const $ Relationships HM.empty
   
 instance ResourceEntity GroupResource where
   resourceIdentifier       = T.pack . show . entityKey . grGroup
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . entityKey . grGroup $ gr)))]
-  resourceMetaData         = const Nothing
+  resourceMetaData         = const metaEmpty
   resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) linksEmpty))]
     where
       mkIdentifier user =
-        Identifier (resourceIdentifier user) (resourceType user) Nothing
+        Identifier (resourceIdentifier user) (resourceType user) metaEmpty
   toResource gr =
     Resource
       (Identifier (resourceIdentifier gr) (resourceType gr) (resourceMetaData gr))

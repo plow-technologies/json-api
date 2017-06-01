@@ -4,6 +4,8 @@
 module Data.JSONAPI.Internal.Relationship (
    Relationship  (..)
  , Relationships (..)
+ , mkRelationship
+ , mkKeyRelationshipPair
  , relationshipsEmpty
  ) where
 
@@ -49,6 +51,16 @@ instance FromJSON Relationships where
 instance Monoid Relationships where
   mappend (Relationships a) (Relationships b) = Relationships $ HM.union a b
   mempty = Relationships $ HM.empty
+
+mkKeyRelationshipPair :: Text -> [Identifier] -> Links -> Maybe (Text, Relationship)
+mkKeyRelationshipPair t identifiers links = (,) <$> pure t <*> mkRelationship identifiers links
+
+mkRelationship :: [Identifier] -> Links -> Maybe Relationship
+mkRelationship [] links@(Links ls) =
+  case HM.size ls of
+    0 -> Nothing
+    _ -> Just $ Relationship [] links
+mkRelationship identifiers links = Just $ Relationship identifiers links
 
 relationshipsEmpty :: Relationships
 relationshipsEmpty = Relationships HM.empty

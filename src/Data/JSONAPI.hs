@@ -18,10 +18,13 @@ module Data.JSONAPI (
  , mkLinks
  , mkIncluded
  , mkMeta
+ , mkKeyRelationshipPair
+ , mkRelationship
  
  -- Helper Functions
  , identifiersFromResourceRelationships
  , includedFromResources
+ , includedFromResources2
  , parseIncludedResources
  , resourcesFromIncluded
  
@@ -41,6 +44,7 @@ module Data.JSONAPI (
 import Data.JSONAPI.Internal.Document
 import Data.JSONAPI.Internal.Error
 import Data.JSONAPI.Internal.Identifier
+import Data.JSONAPI.Internal.Included
 import Data.JSONAPI.Internal.Link
 import Data.JSONAPI.Internal.Meta
 import Data.JSONAPI.Internal.Relationship

@@ -6,10 +6,8 @@ module Data.JSONAPI.Internal.Document (
     Document (..)
   , DocumentEntity (..)
   , ErrorDocument (..)
-  , Included (..)
-  , includedEmpty
   , includedFromResources
-  , mkIncluded
+  , includedFromResources2
   , parseIncludedResources
   , resourcesFromIncluded
   ) where
@@ -17,48 +15,18 @@ module Data.JSONAPI.Internal.Document (
 import           Data.Aeson
 import qualified Data.JSONAPI.Internal.Error as E
 import           Data.JSONAPI.Internal.Identifier (Identifier)
+import           Data.JSONAPI.Internal.Included
 import           Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
 import           Data.JSONAPI.Internal.Meta (Meta)
 import           Data.JSONAPI.Internal.Resource
 import           Data.JSONAPI.Internal.Util ((.=?), (.=@), (.:@), (.=#))
 import           Data.Maybe (catMaybes)
 import qualified Data.Vector as V
-import           GHC.Generics (Generic)
 
 import qualified Data.HashMap.Strict as HM
--- import qualified Data.Foldable as F
+import qualified Data.Foldable as F
 
-newtype Included = Included Array deriving (Eq, Generic, Read, Show)
 
-instance ToJSON Included where
-  toJSON (Included arr) = toJSON arr
-
-instance FromJSON Included where
-  parseJSON = withArray "Included" $ \arr -> return $ Included arr
-
-includedEmpty :: Included
-includedEmpty = Included $ V.empty
-
-mkIncluded :: ToJSON a => [a] -> Included
-mkIncluded as = Included . V.fromList $ toJSON <$> as
-
-parseIncludedResources :: (ResourceEntity a) => Included -> [Resource a]
-parseIncludedResources (Included arr) = catMaybes . V.toList $ resultToMaybe . fromJSON <$> arr
-  where
-    resultToMaybe r =
-      case r of
-        Error   _ -> Nothing
-        Success a -> Just a
-
--- | Included is a heterogenous array of types (JSON objects) stored in an
--- Array (Vector) of Objects (HashMap). Use this function to retrieve resources 
--- and build a sum type that encodes top level Document type and resource 
--- types.
-resourcesFromIncluded :: (ResourceEntity a) => [Identifier] -> Included -> [a]
-resourcesFromIncluded identifiers included = fromResource <$> filter (\identifier -> (rsIdentifier identifier) `elem` identifiers) (parseIncludedResources included)
-
-includedFromResources :: (ResourceEntity a, ResourceEntity b) => [a] -> (a -> [b]) -> Included
-includedFromResources xs f = mkIncluded (concat $ fmap toResource <$> f <$> xs)
 
 data (ResourceEntity a) => Document a =
   Document 
@@ -122,3 +90,24 @@ instance FromJSON (ErrorDocument) where
 class (ResourceEntity a) => DocumentEntity a where
   fromDocument :: Document a -> [a]
   toDocument   :: [a] -> Document a
+  
+-- | Included is a heterogenous array of types (JSON objects) stored in an
+-- Array (Vector) of Objects (HashMap). Use this function to retrieve resources 
+-- and build a sum type that encodes top level Document type and resource 
+-- types.
+resourcesFromIncluded :: (ResourceEntity a) => [Identifier] -> Included -> [a]
+resourcesFromIncluded identifiers included = fromResource <$> filter (\identifier -> (rsIdentifier identifier) `elem` identifiers) (parseIncludedResources included)
+
+includedFromResources :: (ResourceEntity a, ResourceEntity b) => [a] -> (a -> [b]) -> Included
+includedFromResources xs f = mkIncluded (F.concat $ fmap toResource <$> f <$> xs)
+
+includedFromResources2 :: (ResourceEntity a, ResourceEntity b) => [a] -> (a -> Maybe b) -> Included
+includedFromResources2 xs f = mkIncluded (catMaybes $ fmap toResource <$> f <$> xs)
+
+parseIncludedResources :: (ResourceEntity a) => Included -> [Resource a]
+parseIncludedResources (Included arr) = catMaybes . V.toList $ resultToMaybe . fromJSON <$> arr
+  where
+    resultToMaybe r =
+      case r of
+        Error   _ -> Nothing
+        Success a -> Just a

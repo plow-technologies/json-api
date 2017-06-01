@@ -19,6 +19,7 @@ library
   other-modules:       Data.JSONAPI.Internal.Document
                        Data.JSONAPI.Internal.Error
                        Data.JSONAPI.Internal.Identifier
+                       Data.JSONAPI.Internal.Included
                        Data.JSONAPI.Internal.Link
                        Data.JSONAPI.Internal.Meta
                        Data.JSONAPI.Internal.Relationship
