@@ -18,7 +18,7 @@ import           Test.QuickCheck
 data Pagination = 
   Pagination
     { currentPage :: Int
-    , totalPages :: Int
+    , totalPages  :: Int
     } deriving (Eq,Read,Show)
 
 instance ToJSON Pagination where
@@ -35,14 +35,13 @@ data User =
   User
     { userId      :: Int
     , userName    :: Text
-    , userAddress :: Text
     } deriving (Eq,Generic,Read,Show)
     
 instance ToJSON User
 instance FromJSON User
 
 instance Arbitrary User where
-  arbitrary = User <$> arbitrary <*> arbitrary <*> arbitrary
+  arbitrary = User <$> arbitrary <*> arbitrary
 
 data BlogPost =
   BlogPost 

@@ -6,6 +6,10 @@ module Data.JSONAPI.Internal.Document (
     Document (..)
   , DocumentEntity (..)
   , ErrorDocument (..)
+  
+  , fromDocumentComplete
+  , toDocumentComplete
+  
   , includedFromResources
   , includedFromResources2
   , parseIncludedResources
@@ -28,7 +32,7 @@ import qualified Data.Foldable as F
 
 
 
-data (ResourceEntity a) => Document a =
+data (Eq a, ResourceEntity a) => Document a =
   Document 
     { docData      :: [Resource a] -- should never be empty
     , docLinks     :: Links
@@ -36,7 +40,7 @@ data (ResourceEntity a) => Document a =
     , docIncluded  :: Included -- [Value] -- if exists should be (Array [Object, Object,...])
     } deriving (Eq, Read, Show)
 
-instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
+instance (Eq a, ResourceEntity a, ToJSON a) => ToJSON (Document a) where
   toJSON (Document _docData (Links _docLinks) _docMeta@(Meta o) _docIncluded@(Included arr)) =
     object 
       (     "data"     .=@  _docData
@@ -54,7 +58,7 @@ instance (ResourceEntity a, ToJSON a) => ToJSON (Document a) where
           0 -> []
           _ -> ["meta" .= _docMeta]
            
-instance (ResourceEntity a, FromJSON a) => FromJSON (Document a) where
+instance (Eq a, ResourceEntity a, FromJSON a) => FromJSON (Document a) where
   parseJSON = withObject "Document" $ \o -> do
     mMeta  <- o .:? "meta"
     mLinks <- o .:? "links"
@@ -94,9 +98,19 @@ instance FromJSON (ErrorDocument) where
                   <*> o .:? "links"
                   <*> o .:? "meta"
 
+-- should move Relationships
 class (ResourceEntity a) => DocumentEntity a where
-  fromDocument :: Document a -> [a]
-  toDocument   :: [a] -> Document a
+  fromDocument :: Document a -> [a] -- construct [a] from docData and docIncluded
+  toDocument   :: [a] -> Document a -- construct docIncluded with relationships from [a]
+
+
+toDocumentComplete :: (DocumentEntity a, Eq a) => [a] -> Meta -> Links -> Document a
+toDocumentComplete as meta links = doc { docMeta = meta, docLinks = links }
+  where
+    doc = toDocument as
+
+fromDocumentComplete :: (DocumentEntity a, Eq a) => Document a -> ([a], Meta, Links)
+fromDocumentComplete d = (fromDocument d, docMeta d, docLinks d)
   
 -- | Included is a heterogenous array of types (JSON objects) stored in an
 -- Array (Vector) of Objects (HashMap). Use this function to retrieve resources 

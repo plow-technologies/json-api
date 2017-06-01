@@ -10,10 +10,12 @@ module Data.JSONAPI.Internal.Relationship (
  ) where
 
 import           Data.Aeson
+import           Data.Hashable
 import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI.Internal.Identifier (Identifier (..))
 import           Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
 import           Data.JSONAPI.Internal.Util ((.=@),(.:@),(.=#))
+import           Data.List (nub)
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
@@ -24,6 +26,8 @@ data Relationship =
     { rlIdentifiers :: [Identifier] -- can be multiple
     , rlLinks       :: Links
     } deriving (Eq, Generic, Read, Show)
+
+instance Hashable Relationship
 
 instance ToJSON Relationship where
   toJSON (Relationship rlIdntifiers (Links lnks)) =
@@ -41,6 +45,8 @@ instance FromJSON Relationship where
 newtype Relationships = Relationships (HM.HashMap Text Relationship)
   deriving (Eq, Generic, Read, Show)
   
+instance Hashable Relationships
+
 instance ToJSON Relationships where
   toJSON (Relationships o) = object $ (\(x,y) -> (x,toJSON y)) <$> HM.toList o
 
@@ -60,7 +66,7 @@ mkRelationship [] links@(Links ls) =
   case HM.size ls of
     0 -> Nothing
     _ -> Just $ Relationship [] links
-mkRelationship identifiers links = Just $ Relationship identifiers links
+mkRelationship identifiers links = Just $ Relationship (nub identifiers) links
 
 relationshipsEmpty :: Relationships
 relationshipsEmpty = Relationships HM.empty

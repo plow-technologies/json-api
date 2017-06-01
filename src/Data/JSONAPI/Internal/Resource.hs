@@ -8,6 +8,7 @@ module Data.JSONAPI.Internal.Resource (
  ) where
 
 import Data.Aeson
+import Data.Hashable
 import Data.JSONAPI.Internal.Identifier (Identifier(..), HasIdentifier(..))
 import Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
 import Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
@@ -23,6 +24,9 @@ data Resource a =
     , rsLinks         :: Links         -- (Links HM.HashMap) can be empty
     , rsRelationships :: Relationships -- (Relationships HM.HashMap) can be empty
     } deriving (Eq, Read, Show)
+
+instance (Hashable a) => Hashable (Resource a) where
+  hashWithSalt s (Resource i r l rs) = s `hashWithSalt` i `hashWithSalt` r `hashWithSalt` l `hashWithSalt` rs
 
 instance (ToJSON a) => ToJSON (Resource a) where
   toJSON (Resource (Identifier resId resType metaObj@(Meta o)) resObj (Links linksObj) (Relationships rels)) = 

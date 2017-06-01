@@ -24,7 +24,7 @@ document with heterogeneous relationships
 -- document examples
 
 documentText :: Text
-documentText = "{\"data\":{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}}"
+documentText = "{\"data\":{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}}"
 
 documentExample :: Document User
 documentExample =
@@ -36,8 +36,8 @@ documentExample =
 
 documentMultiResourceText :: Text
 documentMultiResourceText = 
-  "{\"data\":[{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}"
-         <> ",{\"id\":\"3\",\"type\":\"users\",\"attributes\":{\"userName\":\"Jordi\",\"userAddress\":\"333 W. 33rd St\",\"userId\":3},\"links\":{\"self\":\"/api/users/3\"}}]}"
+  "{\"data\":[{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}"
+         <> ",{\"id\":\"3\",\"type\":\"users\",\"attributes\":{\"userName\":\"Jordi\",\"userId\":3},\"links\":{\"self\":\"/api/users/3\"}}]}"
 
 documentMultiResourceExample :: Document User
 documentMultiResourceExample =
@@ -48,34 +48,27 @@ documentMultiResourceExample =
     includedEmpty
 
 userExample :: User
-userExample =
-  User 2 "Julio" "222 W. 22nd St"
+userExample = User 2 "Julio"
 
 user2Example :: User
-user2Example =
-  User 3 "Jordi" "333 W. 33rd St"
+user2Example = User 3 "Jordi"
 
 friendExample :: User
-friendExample =
-  User 4 "Johnson" "11 E. 11st St"
+friendExample = User 4 "Johnson"
 
 bossExample :: User
-bossExample =
-  User 5 "Smurphy" "44 N. 44th St"
+bossExample = User 5 "Smurphy"
     
 documentGroupResourceText :: Text
 documentGroupResourceText = 
-  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":[{\"id\":\"2\",\"type\":\"users\"},{\"id\":\"3\",\"type\":\"users\"}]}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}},\"included\":[{\"attributes\":{\"userAddress\":\"222 W. 22nd St\",\"userName\":\"Julio\",\"userId\":2},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}},{\"attributes\":{\"userAddress\":\"333 W. 33rd St\",\"userName\":\"Jordi\",\"userId\":3},\"id\":\"3\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/3\"}}]}"
-
---  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}},\"included\":[{\"attributes\":{\"userAddress\":\"222 W. 22nd St\",\"userName\":\"Julio\",\"userId\":2},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}]}"
---  "{\"included\":[{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\",\"userId\":2},\"links\":{\"self\":\"/api/users/2\"}}],\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":{\"id\":\"2\",\"type\":\"users\"}}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}}}"
+  "{\"data\":{\"attributes\":{\"groupId\":1,\"groupName\":\"test-group\"},\"relationships\":{\"members\":{\"data\":[{\"id\":\"2\",\"type\":\"users\"},{\"id\":\"3\",\"type\":\"users\"}]}},\"id\":\"1\",\"type\":\"groups\",\"links\":{\"self\":\"/api/groups/1\"}},\"included\":[{\"attributes\":{\"userName\":\"Julio\",\"userId\":2},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}},{\"attributes\":{\"userName\":\"Jordi\",\"userId\":3},\"id\":\"3\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/3\"}}]}"
 
 documentGroupResourceExample :: Document GroupResource
 documentGroupResourceExample = toDocument [groupResourceExample]
 
 documentUserResourceText :: Text
 documentUserResourceText = 
-  "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
+  "{\"data\":{\"attributes\":{\"userId\":2,\"userName\":\"Julio\"},\"relationships\":{\"friends\":{\"data\":{\"id\":\"4\",\"type\":\"users\"}},\"boss\":{\"data\":{\"id\":\"5\",\"type\":\"users\"}}},\"id\":\"2\",\"type\":\"users\",\"links\":{\"self\":\"/api/users/2\"}}}"
 
 documentUserResourceExample :: Document UserResource
 documentUserResourceExample = 
@@ -149,18 +142,18 @@ relationshipExample = Relationship [identifierExample] linksExample
 resourceText :: Text
 resourceText = 
      "{\"id\":\"2\",\"type\":\"users\""
-  <> ",\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"}"
+  <> ",\"attributes\":{\"userId\":2,\"userName\":\"Julio\"}"
   <> ",\"relationships\":{\"friend\":{\"data\":{\"id\":\"3\",\"type\":\"users\"},\"links\":{\"self\":\"/api/users/3\"}}}"
   <> "}"
 
 resourceWithLinksText :: Text
-resourceWithLinksText = "{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userId\":2,\"userName\":\"Julio\",\"userAddress\":\"222 W. 22nd St\"},\"links\":{\"self\":\"/api/users/2\",\"friend\":\"/api/users/3\"}}"
+resourceWithLinksText = "{\"id\":\"2\",\"type\":\"users\",\"attributes\":{\"userId\":2,\"userName\":\"Julio\"},\"links\":{\"self\":\"/api/users/2\",\"friend\":\"/api/users/3\"}}"
 
 resourceExample :: Resource User
 resourceExample =
   Resource
     (Identifier "2" "users" metaEmpty)
-    (User 2 "Julio" "222 W. 22nd St")
+    (User 2 "Julio")
     linksEmpty
     (Relationships $ HM.fromList [("friend", Relationship ([Identifier "3" "users" metaEmpty]) (Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
 

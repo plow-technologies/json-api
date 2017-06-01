@@ -5,6 +5,7 @@ module ArbitraryInstances where
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI
+import           Data.List (nub)
 import qualified Data.Text as T
 import           Data.Text (Text)
 import           Test.QuickCheck
@@ -38,7 +39,7 @@ instance Arbitrary Links where
 instance Arbitrary Relationship where
   arbitrary = do
     i             <- choose (0,3)
-    idntifiers    <- vector i
+    idntifiers    <- nub <$> vector i
     Relationship <$> pure idntifiers <*> arbitrary
 
 instance Arbitrary Relationships where
@@ -61,7 +62,7 @@ instance Arbitrary a => Arbitrary (Resource a) where
   arbitrary = Resource <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
 
-instance (ResourceEntity a, Arbitrary a) => Arbitrary (Document a) where
+instance (Eq a, ResourceEntity a, Arbitrary a) => Arbitrary (Document a) where
   arbitrary = do
     resourceSize <- choose (1,3)
     Document <$> vector resourceSize <*> arbitrary <*> arbitrary <*> arbitrary

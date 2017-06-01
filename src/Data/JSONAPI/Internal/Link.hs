@@ -13,9 +13,11 @@ module Data.JSONAPI.Internal.Link (
   , Links (..)
   , linksEmpty
   , mkLinks
+  , mkSimpleLinks
   ) where
 
 import           Data.Aeson
+import           Data.Hashable
 import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
 import           Data.Text (Text)
@@ -55,14 +57,10 @@ Example JSON:
 Specification: <http://jsonapi.org/format/#document-links>
 -}
 
-mkLinks :: [(Text,Link)] -> Links
-mkLinks = Links . HM.fromList
-
-linksEmpty :: Links 
-linksEmpty = Links HM.empty
-
 newtype Links = Links (HM.HashMap Text Link) 
   deriving (Eq, Generic, Read, Show)
+
+instance Hashable Links
 
 instance ToJSON Links where
   toJSON (Links o) = object $ (\(x,y) -> (x,toJSON y)) <$> HM.toList o
@@ -82,6 +80,8 @@ data Link
   | LinkLinkObject LinkObject
   deriving (Eq, Generic, Read, Show)
 
+instance Hashable Link
+
 instance ToJSON Link where
   toJSON (LinkHref _href) = String _href
   toJSON (LinkLinkObject _linkObject) = toJSON _linkObject
@@ -95,6 +95,8 @@ data LinkObject =
     { loHref :: Text -- href
     , loMeta :: Meta
     } deriving (Eq, Generic, Read, Show)
+
+instance Hashable LinkObject
 
 instance ToJSON LinkObject where
   toJSON (LinkObject _loHref _loMeta@(Meta o)) =
@@ -115,3 +117,13 @@ instance FromJSON LinkObject where
             Just mta -> mta  
     LinkObject <$> o .:  "href"
                <*> pure meta
+
+linksEmpty :: Links 
+linksEmpty = Links HM.empty
+
+mkLinks :: [(Text,Link)] -> Links
+mkLinks = Links . HM.fromList
+
+mkSimpleLinks :: [(Text,Text)] -> Links
+mkSimpleLinks = Links . HM.fromList . (fmap (fmap LinkHref))
+

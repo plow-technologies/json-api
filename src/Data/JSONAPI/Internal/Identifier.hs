@@ -13,6 +13,7 @@ module Data.JSONAPI.Internal.Identifier (
  ) where
 
 import           Data.Aeson
+import           Data.Hashable
 import qualified Data.HashMap.Strict as HM
 import           Data.JSONAPI.Internal.Meta (Meta(..), metaEmpty)
 import           Data.Text (Text)
@@ -24,6 +25,8 @@ data Identifier =
     , idType :: Text
     , idMeta :: Meta -- if size is 0 then do not add "meta" key to JSON
     } deriving (Eq, Generic, Read, Show)
+
+instance Hashable Identifier
 
 instance ToJSON Identifier where
   toJSON (Identifier _idId _idType _idMeta@(Meta o)) =

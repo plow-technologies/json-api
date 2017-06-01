@@ -6,11 +6,15 @@ module Data.JSONAPI.Internal.Included (
  ) where
 
 import Data.Aeson
+import Data.Hashable
 import Data.Monoid ((<>))
 import qualified Data.Vector as V
+import Data.Vector.Instances ()
 import GHC.Generics (Generic)
 
 newtype Included = Included Array deriving (Eq, Generic, Read, Show)
+
+instance Hashable Included
 
 instance ToJSON Included where
   toJSON (Included arr) = toJSON arr

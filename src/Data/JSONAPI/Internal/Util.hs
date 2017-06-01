@@ -3,6 +3,7 @@ module Data.JSONAPI.Internal.Util where
 import Data.Aeson
 import Data.Aeson.Types (Pair, Parser)
 import qualified Data.HashMap.Strict as HM
+import Data.List (nub)
 import Data.Text (Text)
 
 
@@ -56,13 +57,13 @@ infixr 8 .=#
 
 -- | Look for a single object or an array of objects. If the key does not 
 -- exist then return an empty list.
-parseSingleObjectOrArrayAsList :: FromJSON a => Object -> Text -> Parser [a]
+parseSingleObjectOrArrayAsList :: (Eq a, FromJSON a) => Object -> Text -> Parser [a]
 parseSingleObjectOrArrayAsList = (.:@)
 
 
-(.:@) :: FromJSON a => Object -> Text -> Parser [a]
+(.:@) :: (Eq a, FromJSON a) => Object -> Text -> Parser [a]
 (.:@) o key = 
   case HM.lookup key o of
-    Just arr@(Array  _a) -> parseJSON arr
+    Just arr@(Array  _a) -> nub <$> parseJSON arr
     Just obj@(Object _o) -> (:[]) <$> parseJSON obj
     _                    -> pure []

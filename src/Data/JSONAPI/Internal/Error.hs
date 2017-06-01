@@ -8,6 +8,7 @@ module Data.JSONAPI.Internal.Error (
 import Data.Aeson hiding (Error)
 import Data.Text
 import GHC.Generics (Generic)
+import Data.Hashable
 import Data.JSONAPI.Internal.Link (Links)
 import Data.JSONAPI.Internal.Meta
 import Data.JSONAPI.Internal.Util ((.=?))
@@ -22,7 +23,9 @@ data Error =
     , errDetail :: Maybe Text
     , errMeta   :: Maybe Meta
     } deriving (Eq, Generic, Read, Show)
-    
+
+instance Hashable Error
+
 instance ToJSON Error where
   toJSON (Error id links status code detail meta) =
     object 

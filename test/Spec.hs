@@ -14,6 +14,7 @@ import           Data.Typeable
 import           Test.Aeson.GenericSpecs
 import           Test.Hspec
 
+import qualified DocumentExamples as DE
 import           Examples
 import           Types
 
@@ -28,15 +29,10 @@ jsonTextHaskellValuePairSpec jsonText haskellValue =
   where
     jsonLazyByteString = TL.encodeUtf8 . TL.fromStrict $ jsonText
     decoded = decode jsonLazyByteString
-    
-documentSpec :: forall a. (DocumentEntity a, Show a, Eq a, Typeable a) => Document a -> Spec
-documentSpec doc = 
-  describe ("DocumentEntity instance for " ++ (show (typeRep (Proxy :: Proxy a)))) $
-    it "fromDocument then toDocument should produce the original document" $ (toDocument . fromDocument $ doc) `shouldBe` doc
-
 
 main :: IO ()
 main = do
+  DE.main
   hspec $ do
     jsonTextHaskellValuePairSpec documentText documentExample
     jsonTextHaskellValuePairSpec documentMultiResourceText documentMultiResourceExample
@@ -49,13 +45,7 @@ main = do
     jsonTextHaskellValuePairSpec relationshipText relationshipExample
     jsonTextHaskellValuePairSpec resourceText resourceExample
     jsonTextHaskellValuePairSpec resourceWithLinksText resourceWithLinksExample
-
-    documentSpec documentGroupResourceExample    
-    -- run serialization tests on arbitrary values
-
-
-    -- roundtripSpecs (Proxy :: Proxy (Document Group))
-    -- roundtripSpecs (Proxy :: Proxy (Document User))
+    
     roundtripSpecs (Proxy :: Proxy Identifier)
     roundtripSpecs (Proxy :: Proxy Included)
     roundtripSpecs (Proxy :: Proxy Links)

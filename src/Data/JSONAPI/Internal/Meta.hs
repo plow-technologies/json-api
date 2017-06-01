@@ -20,11 +20,14 @@ module Data.JSONAPI.Internal.Meta (
 import           Data.Aeson ( Object
                             , FromJSON, parseJSON, withObject
                             , ToJSON, toJSON, object)
+import           Data.Hashable
 import qualified Data.HashMap.Strict as HM
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
 newtype Meta = Meta Object deriving (Eq, Generic, Read, Show)
+
+instance Hashable Meta
 
 instance ToJSON Meta where
   toJSON (Meta o) = object $ HM.toList o

@@ -20,6 +20,7 @@ module Data.JSONAPI (
  , mkMeta
  , mkKeyRelationshipPair
  , mkRelationship
+ , mkSimpleLinks
  
  -- Helper Functions
  , identifiersFromResourceRelationships
@@ -27,6 +28,8 @@ module Data.JSONAPI (
  , includedFromResources2
  , parseIncludedResources
  , resourcesFromIncluded
+ , toDocumentComplete
+ , fromDocumentComplete
  
  -- Values
  , includedEmpty
