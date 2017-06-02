@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module ArbitraryInstances where
@@ -11,6 +12,11 @@ import           Data.Text (Text)
 import           Test.QuickCheck
 import qualified Data.Vector as V
   
+instance Arbitrary (HM.HashMap Text Value) where
+  arbitrary = do 
+    i     <- choose (1,3)
+    HM.fromList <$> vector i
+        
 instance Arbitrary Meta where
   arbitrary = do
     i     <- choose (1,3)
