@@ -34,6 +34,7 @@ library
                      , vector-instances
   if(impl(ghcjs))
     other-modules:     Data.JSONAPI.Internal.GHCJS.Instances
+                       Data.JSONAPI.Internal.GHCJS.Fix
     build-depends:     ghcjs-base
                      , ghcjs-ffiqq
                      , ghcjs-jsval-combinators
