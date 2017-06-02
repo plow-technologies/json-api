@@ -119,10 +119,10 @@ fromDocumentComplete d = (fromDocument d, docMeta d, docLinks d)
 resourcesFromIncluded :: (ResourceEntity a) => [Identifier] -> Included -> [a]
 resourcesFromIncluded identifiers included = fromResource <$> filter (\identifier -> (rsIdentifier identifier) `elem` identifiers) (parseIncludedResources included)
 
-includedFromResources :: (ResourceEntity a, ResourceEntity b) => [a] -> (a -> [b]) -> Included
+includedFromResources :: (ResourceEntity b) => [a] -> (a -> [b]) -> Included
 includedFromResources xs f = mkIncluded (F.concat $ fmap toResource <$> f <$> xs)
 
-includedFromResources2 :: (ResourceEntity a, ResourceEntity b) => [a] -> (a -> Maybe b) -> Included
+includedFromResources2 :: (ResourceEntity b) => [a] -> (a -> Maybe b) -> Included
 includedFromResources2 xs f = mkIncluded (catMaybes $ fmap toResource <$> f <$> xs)
 
 parseIncludedResources :: (ResourceEntity a) => Included -> [Resource a]

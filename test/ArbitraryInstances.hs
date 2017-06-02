@@ -4,8 +4,8 @@ module ArbitraryInstances where
 
 import           Data.Aeson
 import qualified Data.HashMap.Strict as HM
+import qualified Data.HashSet as HS
 import           Data.JSONAPI
-import           Data.List (nub)
 import qualified Data.Text as T
 import           Data.Text (Text)
 import           Test.QuickCheck
@@ -39,7 +39,7 @@ instance Arbitrary Links where
 instance Arbitrary Relationship where
   arbitrary = do
     i             <- choose (0,3)
-    idntifiers    <- nub <$> vector i
+    idntifiers    <- HS.fromList <$> vector i
     Relationship <$> pure idntifiers <*> arbitrary
 
 instance Arbitrary Relationships where

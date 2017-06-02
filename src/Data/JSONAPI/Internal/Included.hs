@@ -1,4 +1,7 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP                  #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Data.JSONAPI.Internal.Included (
    Included (..)
  , includedEmpty
@@ -11,6 +14,13 @@ import Data.Monoid ((<>))
 import qualified Data.Vector as V
 import Data.Vector.Instances ()
 import GHC.Generics (Generic)
+
+-- this instance is not included for the version of hashable used in GHJCS
+#if defined(ghcjs_HOST_OS)
+instance (Hashable a) => Hashable (V.Vector a) where
+  hashWithSalt salt = hashWithSalt salt . V.toList
+  {-# INLINE hashWithSalt #-}
+#endif
 
 newtype Included = Included Array deriving (Eq, Generic, Read, Show)
 

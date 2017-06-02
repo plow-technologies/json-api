@@ -8,6 +8,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# OPTIONS_GHC -fno-warn-orphans       #-}
 
 module Models where
 
@@ -22,7 +23,6 @@ import qualified Data.Text as T
 import           Database.Persist
 import           Database.Persist.Sqlite
 import           Database.Persist.TH
-import qualified Data.Vector as V
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
@@ -161,7 +161,7 @@ instance ResourceEntity GroupResource where
   resourceType             = const "groups"
   resourceLinks         gr = mkLinks [("self", LinkHref ("/api/groups/" <> (T.pack . show . entityKey . grGroup $ gr)))]
   resourceMetaData         = const metaEmpty
-  resourceRelationships gr = Relationships . HM.fromList $ [("members", (Relationship (mkIdentifier <$> grUsers gr) linksEmpty))]
+  resourceRelationships gr = Relationships . HM.fromList $ catMaybes [mkKeyRelationshipPair "members" (mkIdentifier <$> grUsers gr) linksEmpty]
     where
       mkIdentifier user =
         Identifier (resourceIdentifier user) (resourceType user) metaEmpty

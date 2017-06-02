@@ -1,8 +1,13 @@
+{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
 
+#if defined(ghcjs_HOST_OS)
+main :: IO ()
+main = putStrLn "persistent-test does not run in GHCJS"  
+#else
 import Database.Persist.Sqlite
 import Data.JSONAPI
 import Models
@@ -30,13 +35,13 @@ main = do
     
     let groupUserJoin1 = GroupUserJoin user1Id group1Id
     
-    groupUserJoin1Id <- insert groupUserJoin1
+    _groupUserJoin1Id <- insert groupUserJoin1
     
     let blogPost1 = BlogPost "Hello" user1Id
         blogPost2 = BlogPost "Goodbye" user2Id 
     
-    blogPost1Id <- insert blogPost1
-    blogPost2Id <- insert blogPost2
+    _blogPost1Id <- insert blogPost1
+    _blogPost2Id <- insert blogPost2
     
     user  <- head <$> selectList [UserName ==. "Smurphy"] []
     guj   <- head <$> selectList [GroupUserJoinUserId ==. (entityKey user)] []
@@ -46,3 +51,4 @@ main = do
     
   hspec $ do
     documentSpec "UserResource" userDoc
+#endif

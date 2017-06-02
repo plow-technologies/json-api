@@ -4,6 +4,8 @@
 module Examples where
 
 import qualified Data.HashMap.Strict as HM
+-- import qualified Data.HashSet as HS
+import           Data.Maybe (catMaybes)
 import           Data.Monoid ((<>))
 import           Data.JSONAPI
 import           Data.Text (Text)
@@ -88,7 +90,7 @@ groupResourceResourceExample =
     (Identifier "1" "groups" metaEmpty)
     (GroupResource (Group 1 "test-group") [userExample])
     linksEmpty
-    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    (Relationships $ HM.fromList $ catMaybes [mkKeyRelationshipPair "members" [Identifier "2" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))])])
 
 recodedGroupResourceResourceExample :: Resource GroupResource
 recodedGroupResourceResourceExample = 
@@ -96,7 +98,7 @@ recodedGroupResourceResourceExample =
     (Identifier "1" "groups" metaEmpty)
     (GroupResource (Group 1 "test-group") [])
     linksEmpty
-    (Relationships $ HM.fromList [("members", Relationship [Identifier "2" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))]))])
+    (Relationships $ HM.fromList $ catMaybes [mkKeyRelationshipPair "members" [Identifier "2" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/2"))])])
   
 metaText :: Text
 metaText = "{\"pagination\":{\"currentPage\":1,\"totalPages\":15}}"
@@ -126,7 +128,7 @@ relationshipText :: Text
 relationshipText = "{\"data\":{\"id\":\"1\",\"type\":\"users\"},\"links\":{\"next\":\"/api/users/2\",\"self\":\"/api/users/1\"}}"
 
 relationshipExample :: Relationship
-relationshipExample = Relationship [identifierExample] linksExample
+(Just relationshipExample) = mkRelationship [identifierExample] linksExample
 
 resourceText :: Text
 resourceText = 
@@ -144,13 +146,13 @@ resourceExample =
     (Identifier "2" "users" metaEmpty)
     (User 2 "Julio")
     linksEmpty
-    (Relationships $ HM.fromList [("friend", Relationship ([Identifier "3" "users" metaEmpty]) (Links $ HM.fromList [("self", (LinkHref "/api/users/3"))]))])
+    (Relationships $ HM.fromList $ catMaybes [mkKeyRelationshipPair "friend" [Identifier "3" "users" metaEmpty] (Links $ HM.fromList [("self", (LinkHref "/api/users/3"))])])
 
 resourceWithLinksExample :: Resource User
 resourceWithLinksExample =
   Resource
     (Identifier "2" "users" metaEmpty)
     userExample
-    (mkLinks [("self",(LinkHref "/api/users/2")),("friend",(LinkHref "/api/users/3"))])
+    (mkSimpleLinks [("self","/api/users/2"),("friend","/api/users/3")])
     relationshipsEmpty
 

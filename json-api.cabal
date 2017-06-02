@@ -31,7 +31,14 @@ library
                      , text
                      , unordered-containers
                      , vector
-                     , vector-instances               
+                     , vector-instances
+  if(impl(ghcjs))
+    other-modules:     Data.JSONAPI.Internal.GHCJS.Instances
+    build-depends:     ghcjs-base
+                     , ghcjs-ffiqq
+                     , ghcjs-jsval-combinators
+                     , ghcjs-prim
+                     , transformers  
   default-language:    Haskell2010
   ghc-options:         -Wall -Werror
 
@@ -40,30 +47,43 @@ test-suite test
   hs-source-dirs:      test
   main-is:             Spec.hs
   other-modules:       ArbitraryInstances
-                       DocumentExamples
-                       Examples
-                       Types
   build-depends:       base
                      , aeson
                      , json-api
                      , hashable
                      , hspec
-                     , hspec-golden-aeson
                      , quickcheck-arbitrary-adt
                      , QuickCheck
                      , text
                      , unordered-containers
                      , vector
+  if(impl(ghcjs))
+    other-modules:     GHCJS.Spec
+    build-depends:     ghcjs-base
+                     , ghcjs-ffiqq
+                     , ghcjs-hspec-json
+                     , ghcjs-jsval-combinators
+                     , ghcjs-prim
+                     , transformers
+  else
+    other-modules:     GHC.Spec
+                       DocumentExamples
+                       Examples
+                       Types
+    build-depends:     hspec-golden-aeson
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Werror  
   default-language:    Haskell2010
+
 
 test-suite persistent-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      persistent-test
   main-is:             Spec.hs
-  other-modules:       Models
   build-depends:       base
-                     , aeson
+  if(!impl(ghcjs))
+    other-modules:     Models
+    build-depends:
+                       aeson
                      , json-api
                      , hashable
                      , hspec
@@ -73,10 +93,9 @@ test-suite persistent-test
                      , text
                      , unordered-containers
                      , vector
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
---  -Wall -Werror  
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Werror  
   default-language:    Haskell2010
-  
+
 
 source-repository head
   type:     git

@@ -12,10 +12,10 @@ module Data.JSONAPI.Internal.Relationship (
 import           Data.Aeson
 import           Data.Hashable
 import qualified Data.HashMap.Strict as HM
+import qualified Data.HashSet as HS
 import           Data.JSONAPI.Internal.Identifier (Identifier (..))
 import           Data.JSONAPI.Internal.Link (Links(..), linksEmpty)
-import           Data.JSONAPI.Internal.Util ((.=@),(.:@),(.=#))
-import           Data.List (nub)
+import           Data.JSONAPI.Internal.Util ((.=#), (.:@))
 import           Data.Text (Text)
 import           GHC.Generics (Generic)
 
@@ -23,7 +23,7 @@ import           GHC.Generics (Generic)
 
 data Relationship =
   Relationship
-    { rlIdentifiers :: [Identifier] -- can be multiple
+    { rlIdentifiers :: HS.HashSet Identifier
     , rlLinks       :: Links
     } deriving (Eq, Generic, Read, Show)
 
@@ -31,15 +31,27 @@ instance Hashable Relationship
 
 instance ToJSON Relationship where
   toJSON (Relationship rlIdntifiers (Links lnks)) =
-    object ("data" .=@ rlIdntifiers ++ "links" .=# lnks)
-
+    object (identifiers ++ "links" .=# lnks)
+    where
+      identifiers = 
+        case HS.size rlIdntifiers of
+          0 -> []
+          1 -> ["data" .= (head $ HS.toList rlIdntifiers)]
+          _ -> ["data" .= rlIdntifiers]
+          
 instance FromJSON Relationship where
   parseJSON = withObject "Relationship" $ \o -> do
+    --mIdentifiers <- o .:? "data"
     mLnks <- o .:? "links"
+    {-
+    let identifiers = case mIdentifiers of
+          Nothing    -> HS.empty
+          Just idnts -> idnts
+    -}
     let lnks = case mLnks of 
           Nothing    -> linksEmpty
           Just jlnks -> jlnks
-    Relationship <$> o .:@ "data"
+    Relationship <$> (HS.fromList <$> o .:@ "data")
                  <*> pure lnks
 
 newtype Relationships = Relationships (HM.HashMap Text Relationship)
@@ -65,8 +77,8 @@ mkRelationship :: [Identifier] -> Links -> Maybe Relationship
 mkRelationship [] links@(Links ls) =
   case HM.size ls of
     0 -> Nothing
-    _ -> Just $ Relationship [] links
-mkRelationship identifiers links = Just $ Relationship (nub identifiers) links
+    _ -> Just $ Relationship HS.empty links
+mkRelationship identifiers links = Just $ Relationship (HS.fromList identifiers) links
 
 relationshipsEmpty :: Relationships
 relationshipsEmpty = Relationships HM.empty

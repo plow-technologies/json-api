@@ -1,23 +1,24 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module DocumentExamples where
+module DocumentExamples (
+   spec
+ ) where
   
 import Data.JSONAPI
 import Types
 import Test.Hspec
 
-main :: IO ()
-main = 
-  hspec $ do
-    documentSpec "Document with a single Resource" docWithSingleResource
-    documentSpec "Document with Links" docWithLinks
-    documentSpec "Document with Meta" docWithMeta
-    documentSpec "Document with Links and Meta" docWithLinksAndMeta
-    documentSpec "Document with a single Relationships" docWithRelationships
-    documentSpec "Document with a similarly typed Relationships but different keys" docWithSimilarlyTypedRelationships
-    documentSpec "Document with heteorogeneous Relationships" docWithHeterogeneousRelationships
-    documentSpec "Document with multiple Resources" docWithMultipleResources
+spec :: Spec
+spec = do 
+  documentSpec "Document with a single Resource" docWithSingleResource
+  documentSpec "Document with Links" docWithLinks
+  documentSpec "Document with Meta" docWithMeta
+  documentSpec "Document with Links and Meta" docWithLinksAndMeta
+  documentSpec "Document with a single Relationships" docWithRelationships
+  documentSpec "Document with a similarly typed Relationships but different keys" docWithSimilarlyTypedRelationships
+  documentSpec "Document with heteorogeneous Relationships" docWithHeterogeneousRelationships
+  documentSpec "Document with multiple Resources" docWithMultipleResources
         
 documentSpec :: forall a. (DocumentEntity a, Show a, Eq a) => String -> Document a -> Spec
 documentSpec s doc = 

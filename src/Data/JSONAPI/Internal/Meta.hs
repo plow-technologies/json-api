@@ -1,5 +1,6 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
-
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {- |
 Module representing a JSON-API meta object.
 
@@ -29,15 +30,16 @@ newtype Meta = Meta Object deriving (Eq, Generic, Read, Show)
 
 instance Hashable Meta
 
+instance Monoid Meta where
+  mappend (Meta a) (Meta b) = Meta $ HM.union a b
+  mempty = Meta $ HM.empty
+
 instance ToJSON Meta where
   toJSON (Meta o) = object $ HM.toList o
 
 instance FromJSON Meta where
   parseJSON = withObject "Meta" $ \o -> return $ Meta o
-  
-instance Monoid Meta where
-  mappend (Meta a) (Meta b) = Meta $ HM.union a b
-  mempty = Meta $ HM.empty
+
 
 class (ToJSON a) => MetaObject a where
   typeName :: a -> Text
