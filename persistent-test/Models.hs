@@ -8,6 +8,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 {-# OPTIONS_GHC -fno-warn-orphans       #-}
 
 module Models where
@@ -104,10 +105,10 @@ instance FromJSON GroupResource where
   parseJSON o =
     GroupResource <$> parseJSON o <*> pure []
   
-instance (ToJSON a) => ToJSON (Entity a) where
+instance (ToJSON a, ToBackendKey SqlBackend a) => ToJSON (Entity a) where
   toJSON (Entity key value) =
     object 
-      [ "key"   .= key
+      [ "key"   .= fromSqlKey key
       , "value" .= value
       ]
 
