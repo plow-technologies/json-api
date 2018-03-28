@@ -1,11 +1,11 @@
-resolver: lts-8.13
+resolver: lts-11.2
 
 packages:
 - '.'
 
 extra-deps:
-- hspec-golden-aeson-0.2.0.3
-- quickcheck-arbitrary-adt-0.2.0.0
+- hspec-golden-aeson-0.5.1.0
+- quickcheck-arbitrary-adt-0.3.1.0
 
 flags: {}
 

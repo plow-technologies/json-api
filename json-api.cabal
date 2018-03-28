@@ -32,14 +32,6 @@ library
                      , unordered-containers
                      , vector
                      , vector-instances
-  if(impl(ghcjs))
-    other-modules:     Data.JSONAPI.Internal.GHCJS.Instances
-                       Data.JSONAPI.Internal.GHCJS.Fix
-    build-depends:     ghcjs-base
-                     , ghcjs-ffiqq
-                     , ghcjs-jsval-combinators
-                     , ghcjs-prim
-                     , transformers  
   default-language:    Haskell2010
   ghc-options:         -Wall -Werror
 
@@ -58,20 +50,12 @@ test-suite test
                      , text
                      , unordered-containers
                      , vector
-  if(impl(ghcjs))
-    other-modules:     GHCJS.Spec
-    build-depends:     ghcjs-base
-                     , ghcjs-ffiqq
-                     , ghcjs-hspec-json
-                     , ghcjs-jsval-combinators
-                     , ghcjs-prim
-                     , transformers
-  else
-    other-modules:     GHC.Spec
-                       DocumentExamples
-                       Examples
-                       Types
-    build-depends:     hspec-golden-aeson
+
+  other-modules:     GHC.Spec
+                     DocumentExamples
+                     Examples
+                     Types
+  build-depends:     hspec-golden-aeson
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N -Wall -Werror  
   default-language:    Haskell2010
 
@@ -81,10 +65,8 @@ test-suite persistent-test
   hs-source-dirs:      persistent-test
   main-is:             Spec.hs
   build-depends:       base
-  if(!impl(ghcjs))
-    other-modules:     Models
-    build-depends:
-                       aeson
+  other-modules:       Models
+  build-depends:       aeson
                      , json-api
                      , hashable
                      , hspec

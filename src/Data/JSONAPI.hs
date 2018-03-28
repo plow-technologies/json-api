@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 module Data.JSONAPI (
  -- Types
  -- on the right side is a list of each type's internal dependency
@@ -54,7 +52,3 @@ import Data.JSONAPI.Internal.Link
 import Data.JSONAPI.Internal.Meta
 import Data.JSONAPI.Internal.Relationship
 import Data.JSONAPI.Internal.Resource
-
-#if defined(ghcjs_HOST_OS)
-import Data.JSONAPI.Internal.GHCJS.Instances ()  
-#endif
